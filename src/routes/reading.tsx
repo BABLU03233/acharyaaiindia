@@ -36,7 +36,9 @@ function Reading() {
       "right";
     setHand(h);
     let cancelled = false;
-    fetchReading({ data: { hand: h } })
+    const imageDataUrl =
+      (typeof window !== "undefined" && sessionStorage.getItem("hasta:palmImage")) || undefined;
+    fetchReading({ data: { hand: h, imageDataUrl: imageDataUrl || undefined } })
       .then((r) => !cancelled && setData(r as ReadingData))
       .catch((e: unknown) => !cancelled && setError(e instanceof Error ? e.message : "Failed to generate reading"));
     return () => {
