@@ -1,9 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { SiteNav } from "@/components/site/Nav";
 import { SiteFooter } from "@/components/site/Footer";
-import { generateReading } from "@/lib/reading.functions";
+import { generateReading, askAcharya } from "@/lib/reading.functions";
 
 export const Route = createFileRoute("/reading")({
   head: () => ({
@@ -16,11 +16,17 @@ export const Route = createFileRoute("/reading")({
 });
 
 type Section = { title: string; body: string };
+type Point = { x: number; y: number };
+type LineAnno = { name: string; color: string; points: Point[]; note?: string };
+type MountAnno = { name: string; x: number; y: number; state: "raised" | "flat" | "marked"; note?: string };
+type SignAnno = { name: string; x: number; y: number; meaning?: string };
+type Annotations = { lines: LineAnno[]; mounts: MountAnno[]; signs: SignAnno[] };
 type ReadingData = {
   scores: { destiny: number; wealth: number; love: number; karma: number };
   free: Section[];
   premium: Section[];
   summary: string;
+  annotations: Annotations;
 };
 
 function Reading() {
@@ -28,6 +34,7 @@ function Reading() {
   const [data, setData] = useState<ReadingData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [hand, setHand] = useState<"left" | "right">("right");
+  const [palmImage, setPalmImage] = useState<string | null>(null);
 
   useEffect(() => {
     const h =
@@ -38,6 +45,7 @@ function Reading() {
     let cancelled = false;
     const imageDataUrl =
       (typeof window !== "undefined" && sessionStorage.getItem("hasta:palmImage")) || undefined;
+    if (imageDataUrl) setPalmImage(imageDataUrl);
     fetchReading({ data: { hand: h, imageDataUrl: imageDataUrl || undefined } })
       .then((r) => !cancelled && setData(r as ReadingData))
       .catch((e: unknown) => !cancelled && setError(e instanceof Error ? e.message : "Failed to generate reading"));
@@ -65,6 +73,10 @@ function Reading() {
             </p>
           )}
         </div>
+
+        {palmImage && (
+          <PalmCanvas image={palmImage} annotations={data?.annotations} loading={!data && !error} />
+        )}
 
         {error && (
           <div className="p-6 rounded-2xl border border-destructive/40 bg-destructive/5 text-center text-sm text-destructive">
@@ -167,7 +179,353 @@ function Reading() {
           </Link>
         </div>
       </main>
+
+      {data && <AcharyaChat hand={hand} imageDataUrl={palmImage} data={data} />}
       <SiteFooter />
     </div>
+  );
+}
+
+/* ---------------- Palm canvas with auto-drawn rekhas ---------------- */
+
+function PalmCanvas({
+  image,
+  annotations,
+  loading,
+}: {
+  image: string;
+  annotations?: Annotations;
+  loading: boolean;
+}) {
+  const [active, setActive] = useState<string | null>(null);
+  const [drawProgress, setDrawProgress] = useState(0);
+
+  useEffect(() => {
+    if (!annotations) return;
+    let raf = 0;
+    const start = performance.now();
+    const dur = 1800;
+    const tick = (t: number) => {
+      const p = Math.min(1, (t - start) / dur);
+      setDrawProgress(p);
+      if (p < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [annotations]);
+
+  const lines = annotations?.lines ?? [];
+  const mounts = annotations?.mounts ?? [];
+  const signs = annotations?.signs ?? [];
+
+  return (
+    <section className="space-y-4">
+      <div className="relative rounded-3xl overflow-hidden border border-border bg-card shadow-gold-sm">
+        <img src={image} alt="Your palm" className="w-full h-auto block" />
+        <svg
+          className="absolute inset-0 w-full h-full pointer-events-none"
+          viewBox="0 0 1 1"
+          preserveAspectRatio="none"
+        >
+          {loading && (
+            <rect x="0" y="0" width="1" height="1" fill="url(#scanGrad)" opacity="0.15">
+              <animate attributeName="opacity" values="0.05;0.25;0.05" dur="1.8s" repeatCount="indefinite" />
+            </rect>
+          )}
+          <defs>
+            <linearGradient id="scanGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="hsl(var(--accent))" stopOpacity="0" />
+              <stop offset="50%" stopColor="hsl(var(--accent))" stopOpacity="1" />
+              <stop offset="100%" stopColor="hsl(var(--accent))" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+
+          {lines.map((ln) => {
+            if (!ln.points?.length) return null;
+            const d = ln.points
+              .map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(4)},${p.y.toFixed(4)}`)
+              .join(" ");
+            const isActive = active === ln.name;
+            return (
+              <g key={ln.name}>
+                <path
+                  d={d}
+                  fill="none"
+                  stroke={ln.color}
+                  strokeWidth={isActive ? 0.012 : 0.007}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  vectorEffect="non-scaling-stroke"
+                  opacity={0.95}
+                  style={{
+                    strokeDasharray: 2,
+                    strokeDashoffset: 2 * (1 - drawProgress),
+                    transition: "stroke-width 200ms",
+                    filter: `drop-shadow(0 0 0.004px ${ln.color})`,
+                  }}
+                />
+              </g>
+            );
+          })}
+
+          {mounts.map((m, i) => (
+            <g key={`m-${i}`}>
+              <circle
+                cx={m.x}
+                cy={m.y}
+                r={0.018}
+                fill="hsl(var(--accent))"
+                opacity={0.85}
+                style={{ opacity: drawProgress * 0.85 }}
+              />
+              <circle
+                cx={m.x}
+                cy={m.y}
+                r={0.028}
+                fill="none"
+                stroke="hsl(var(--accent))"
+                strokeWidth={0.003}
+                vectorEffect="non-scaling-stroke"
+                opacity={drawProgress * 0.5}
+              />
+            </g>
+          ))}
+
+          {signs.map((s, i) => (
+            <g key={`s-${i}`}>
+              <rect
+                x={s.x - 0.015}
+                y={s.y - 0.015}
+                width={0.03}
+                height={0.03}
+                fill="none"
+                stroke="#fbbf24"
+                strokeWidth={0.004}
+                vectorEffect="non-scaling-stroke"
+                opacity={drawProgress}
+                transform={`rotate(45 ${s.x} ${s.y})`}
+              />
+            </g>
+          ))}
+        </svg>
+
+        {loading && (
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute inset-x-0 h-1 bg-gradient-to-r from-transparent via-accent to-transparent animate-[scan-line_2.5s_linear_infinite]" />
+          </div>
+        )}
+      </div>
+
+      {lines.length > 0 && (
+        <div className="flex flex-wrap gap-2 justify-center">
+          {lines.map((ln) => (
+            <button
+              key={ln.name}
+              onMouseEnter={() => setActive(ln.name)}
+              onMouseLeave={() => setActive(null)}
+              className="px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest border bg-card hover:bg-accent/5 transition-all"
+              style={{ borderColor: ln.color, color: ln.color }}
+              title={ln.note}
+            >
+              <span className="inline-block size-2 rounded-full mr-2" style={{ background: ln.color }} />
+              {ln.name}
+            </button>
+          ))}
+          {mounts.length > 0 && (
+            <span className="px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest border border-accent/40 text-accent/80">
+              ● {mounts.length} mount{mounts.length > 1 ? "s" : ""} detected
+            </span>
+          )}
+          {signs.length > 0 && (
+            <span className="px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest border border-amber-400/40 text-amber-400">
+              ◆ {signs.length} sign{signs.length > 1 ? "s" : ""}
+            </span>
+          )}
+        </div>
+      )}
+
+      {active && (
+        <p className="text-center text-sm text-foreground/70 font-serif italic">
+          {lines.find((l) => l.name === active)?.note}
+        </p>
+      )}
+    </section>
+  );
+}
+
+/* ---------------- Q&A bot with the Acharya ---------------- */
+
+type Msg = { role: "user" | "acharya"; text: string };
+
+const SUGGESTED = [
+  "When will I marry?",
+  "Will I become wealthy?",
+  "What career suits me?",
+  "What is my hidden talent?",
+  "Is foreign travel in my destiny?",
+];
+
+function AcharyaChat({
+  hand,
+  imageDataUrl,
+  data,
+}: {
+  hand: "left" | "right";
+  imageDataUrl: string | null;
+  data: ReadingData;
+}) {
+  const ask = useServerFn(askAcharya);
+  const [open, setOpen] = useState(false);
+  const [showInvite, setShowInvite] = useState(false);
+  const [msgs, setMsgs] = useState<Msg[]>([
+    {
+      role: "acharya",
+      text: "Beta, the rekhas have spoken. What weighs on your heart? Marriage, dhana, career, or the path of dharma — ask, and the shastra shall answer.",
+    },
+  ]);
+  const [input, setInput] = useState("");
+  const [busy, setBusy] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const t = setTimeout(() => setShowInvite(true), 1500);
+    return () => clearTimeout(t);
+  }, []);
+
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
+  }, [msgs, open]);
+
+  const context = useMemo(() => {
+    const parts = [
+      `Summary: ${data.summary}`,
+      ...data.free.map((f) => `${f.title}: ${f.body}`),
+      ...data.premium.slice(0, 2).map((f) => `${f.title}: ${f.body}`),
+    ];
+    return parts.join("\n").slice(0, 4000);
+  }, [data]);
+
+  const send = async (q: string) => {
+    const question = q.trim();
+    if (!question || busy) return;
+    setMsgs((m) => [...m, { role: "user", text: question }]);
+    setInput("");
+    setBusy(true);
+    try {
+      const r = await ask({ data: { hand, question, imageDataUrl: imageDataUrl ?? undefined, context } });
+      setMsgs((m) => [...m, { role: "acharya", text: r.answer }]);
+    } catch (e) {
+      setMsgs((m) => [
+        ...m,
+        { role: "acharya", text: e instanceof Error ? e.message : "The shastra is silent at this moment." },
+      ]);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <>
+      {/* Floating launcher */}
+      <button
+        onClick={() => {
+          setOpen(true);
+          setShowInvite(false);
+        }}
+        className="fixed bottom-6 right-6 z-40 flex items-center gap-3 bg-accent text-accent-foreground pl-4 pr-5 py-3 rounded-full shadow-gold hover:scale-105 transition-all"
+      >
+        <span className="size-9 rounded-full bg-background/20 flex items-center justify-center text-lg">🪔</span>
+        <span className="font-bold text-sm">Ask the Acharya</span>
+      </button>
+
+      {showInvite && !open && (
+        <div className="fixed bottom-24 right-6 z-40 max-w-xs bg-card border border-accent/40 rounded-2xl p-4 shadow-gold animate-[float_6s_ease-in-out_infinite]">
+          <p className="text-sm font-serif italic text-foreground/85">
+            "Your reading is only the beginning. Ask me anything — marriage, wealth, dharma."
+          </p>
+          <div className="text-[10px] uppercase tracking-widest font-bold text-accent mt-2">— Acharya Hasta</div>
+        </div>
+      )}
+
+      {open && (
+        <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-background/70 backdrop-blur-sm p-0 md:p-6">
+          <div className="w-full max-w-lg h-[80vh] md:h-[640px] bg-card border border-accent/30 rounded-t-3xl md:rounded-3xl shadow-gold flex flex-col overflow-hidden">
+            <header className="flex items-center justify-between px-5 py-4 border-b border-border bg-gradient-to-r from-accent/10 to-transparent">
+              <div className="flex items-center gap-3">
+                <div className="size-10 rounded-full bg-accent flex items-center justify-center text-xl">🪔</div>
+                <div>
+                  <div className="font-serif text-lg">Acharya Hasta</div>
+                  <div className="text-[10px] uppercase tracking-widest text-accent">Hasta Samudrika Shastra · Live</div>
+                </div>
+              </div>
+              <button onClick={() => setOpen(false)} className="text-foreground/60 hover:text-foreground text-2xl leading-none">
+                ×
+              </button>
+            </header>
+
+            <div ref={scrollRef} className="flex-1 overflow-y-auto px-5 py-5 space-y-4">
+              {msgs.map((m, i) => (
+                <div key={i} className={m.role === "user" ? "flex justify-end" : "flex justify-start"}>
+                  <div
+                    className={
+                      m.role === "user"
+                        ? "max-w-[85%] px-4 py-3 rounded-2xl rounded-br-sm bg-accent text-accent-foreground text-sm"
+                        : "max-w-[90%] px-4 py-3 rounded-2xl rounded-bl-sm bg-background/60 border border-border text-foreground/90 font-serif leading-relaxed"
+                    }
+                  >
+                    {m.text}
+                  </div>
+                </div>
+              ))}
+              {busy && (
+                <div className="flex justify-start">
+                  <div className="px-4 py-3 rounded-2xl bg-background/60 border border-border text-xs font-mono uppercase tracking-widest text-accent animate-pulse">
+                    consulting the shastra…
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {msgs.length <= 1 && (
+              <div className="px-5 pb-2 flex flex-wrap gap-2">
+                {SUGGESTED.map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => send(s)}
+                    disabled={busy}
+                    className="text-xs px-3 py-1.5 rounded-full border border-border bg-background/40 hover:border-accent hover:text-accent transition-all"
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                send(input);
+              }}
+              className="p-3 border-t border-border flex gap-2 bg-background/40"
+            >
+              <input
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Ask the Acharya…"
+                className="flex-1 bg-card border border-border rounded-full px-5 py-3 text-sm outline-none focus:border-accent"
+                disabled={busy}
+              />
+              <button
+                type="submit"
+                disabled={busy || !input.trim()}
+                className="bg-accent text-accent-foreground px-5 py-3 rounded-full font-bold text-sm disabled:opacity-40"
+              >
+                Send
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
