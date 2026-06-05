@@ -72,7 +72,7 @@ function HandPicker({ onSelect }: { onSelect: (h: "left" | "right") => void }) {
 }
 
 /** Compress an image source to a JPEG data URL ≤ ~900px on the long edge. */
-async function compressToDataUrl(src: Blob | string, maxDim = 900, quality = 0.82): Promise<string> {
+async function compressToDataUrl(src: Blob | string, maxDim = 1280, quality = 0.88): Promise<string> {
   const url = typeof src === "string" ? src : URL.createObjectURL(src);
   try {
     const img = await new Promise<HTMLImageElement>((res, rej) => {
@@ -156,13 +156,13 @@ function CaptureStep({ hand, onComplete }: { hand: "left" | "right"; onComplete:
     const canvas = document.createElement("canvas");
     const w = video.videoWidth;
     const h = video.videoHeight;
-    const maxDim = 900;
+    const maxDim = 1280;
     const scale = Math.min(1, maxDim / Math.max(w, h));
     canvas.width = Math.round(w * scale);
     canvas.height = Math.round(h * scale);
     const ctx = canvas.getContext("2d")!;
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    const dataUrl = canvas.toDataURL("image/jpeg", 0.82);
+    const dataUrl = canvas.toDataURL("image/jpeg", 0.88);
     setPreview(dataUrl);
     await handAndGo(dataUrl);
   };

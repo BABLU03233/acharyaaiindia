@@ -20,7 +20,16 @@ type Point = { x: number; y: number };
 type LineAnno = { name: string; color: string; points: Point[]; note?: string };
 type MountAnno = { name: string; x: number; y: number; state: "raised" | "flat" | "marked"; note?: string };
 type SignAnno = { name: string; x: number; y: number; meaning?: string };
-type Annotations = { lines: LineAnno[]; mounts: MountAnno[]; signs: SignAnno[] };
+type PalmBox = { x: number; y: number; w: number; h: number };
+type Annotations = {
+  palmDetected: boolean;
+  palmBox: PalmBox;
+  imageQuality: "excellent" | "good" | "poor";
+  notes?: string;
+  lines: LineAnno[];
+  mounts: MountAnno[];
+  signs: SignAnno[];
+};
 type ReadingData = {
   scores: { destiny: number; wealth: number; love: number; karma: number };
   free: Section[];
@@ -202,9 +211,10 @@ function PalmCanvas({
 
   useEffect(() => {
     if (!annotations) return;
+    setDrawProgress(0);
     let raf = 0;
     const start = performance.now();
-    const dur = 1800;
+    const dur = 2200;
     const tick = (t: number) => {
       const p = Math.min(1, (t - start) / dur);
       setDrawProgress(p);
@@ -214,9 +224,39 @@ function PalmCanvas({
     return () => cancelAnimationFrame(raf);
   }, [annotations]);
 
+  const box: PalmBox = annotations?.palmBox ?? { x: 0, y: 0, w: 1, h: 1 };
   const lines = annotations?.lines ?? [];
   const mounts = annotations?.mounts ?? [];
   const signs = annotations?.signs ?? [];
+  const palmDetected = annotations?.palmDetected ?? false;
+  const quality = annotations?.imageQuality;
+
+  // Map a (px,py) that is normalized inside palmBox into normalized full-image coords (0..1).
+  const toImg = (px: number, py: number) => ({
+    x: box.x + px * box.w,
+    y: box.y + py * box.h,
+  });
+
+  // Catmull-Rom -> cubic Bezier path for smooth line tracing.
+  const smoothPath = (pts: Point[]): string => {
+    if (pts.length === 0) return "";
+    const P = pts.map((p) => toImg(p.x, p.y));
+    if (P.length === 1) return `M${P[0].x},${P[0].y}`;
+    if (P.length === 2) return `M${P[0].x},${P[0].y} L${P[1].x},${P[1].y}`;
+    let d = `M${P[0].x.toFixed(5)},${P[0].y.toFixed(5)}`;
+    for (let i = 0; i < P.length - 1; i++) {
+      const p0 = P[i - 1] ?? P[i];
+      const p1 = P[i];
+      const p2 = P[i + 1];
+      const p3 = P[i + 2] ?? p2;
+      const c1x = p1.x + (p2.x - p0.x) / 6;
+      const c1y = p1.y + (p2.y - p0.y) / 6;
+      const c2x = p2.x - (p3.x - p1.x) / 6;
+      const c2y = p2.y - (p3.y - p1.y) / 6;
+      d += ` C${c1x.toFixed(5)},${c1y.toFixed(5)} ${c2x.toFixed(5)},${c2y.toFixed(5)} ${p2.x.toFixed(5)},${p2.y.toFixed(5)}`;
+    }
+    return d;
+  };
 
   return (
     <section className="space-y-4">
@@ -227,86 +267,141 @@ function PalmCanvas({
           viewBox="0 0 1 1"
           preserveAspectRatio="none"
         >
-          {loading && (
-            <rect x="0" y="0" width="1" height="1" fill="url(#scanGrad)" opacity="0.15">
-              <animate attributeName="opacity" values="0.05;0.25;0.05" dur="1.8s" repeatCount="indefinite" />
-            </rect>
-          )}
           <defs>
             <linearGradient id="scanGrad" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="hsl(var(--accent))" stopOpacity="0" />
               <stop offset="50%" stopColor="hsl(var(--accent))" stopOpacity="1" />
               <stop offset="100%" stopColor="hsl(var(--accent))" stopOpacity="0" />
             </linearGradient>
+            <mask id="palmMask">
+              <rect x="0" y="0" width="1" height="1" fill="white" opacity="0.55" />
+              <rect
+                x={box.x}
+                y={box.y}
+                width={box.w}
+                height={box.h}
+                rx={Math.min(box.w, box.h) * 0.18}
+                ry={Math.min(box.w, box.h) * 0.18}
+                fill="black"
+              />
+            </mask>
           </defs>
+
+          {/* Dim background outside detected palm */}
+          {palmDetected && annotations && (
+            <rect
+              x="0"
+              y="0"
+              width="1"
+              height="1"
+              fill="black"
+              opacity={0.35 * drawProgress}
+              mask="url(#palmMask)"
+            />
+          )}
+
+          {/* Palm box outline */}
+          {palmDetected && annotations && (
+            <rect
+              x={box.x}
+              y={box.y}
+              width={box.w}
+              height={box.h}
+              rx={Math.min(box.w, box.h) * 0.18}
+              ry={Math.min(box.w, box.h) * 0.18}
+              fill="none"
+              stroke="hsl(var(--accent))"
+              strokeWidth={0.0035}
+              vectorEffect="non-scaling-stroke"
+              opacity={0.35 * drawProgress}
+              strokeDasharray="0.012 0.008"
+            />
+          )}
+
+          {loading && (
+            <rect x="0" y="0" width="1" height="1" fill="url(#scanGrad)" opacity="0.15">
+              <animate attributeName="opacity" values="0.05;0.25;0.05" dur="1.8s" repeatCount="indefinite" />
+            </rect>
+          )}
 
           {lines.map((ln) => {
             if (!ln.points?.length) return null;
-            const d = ln.points
-              .map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(4)},${p.y.toFixed(4)}`)
-              .join(" ");
+            const d = smoothPath(ln.points);
             const isActive = active === ln.name;
             return (
               <g key={ln.name}>
+                {/* Soft glow */}
                 <path
                   d={d}
                   fill="none"
                   stroke={ln.color}
-                  strokeWidth={isActive ? 0.012 : 0.007}
+                  strokeWidth={isActive ? 0.022 : 0.014}
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   vectorEffect="non-scaling-stroke"
-                  opacity={0.95}
+                  opacity={0.25}
                   style={{
-                    strokeDasharray: 2,
-                    strokeDashoffset: 2 * (1 - drawProgress),
+                    strokeDasharray: 4,
+                    strokeDashoffset: 4 * (1 - drawProgress),
+                  }}
+                />
+                {/* Crisp line */}
+                <path
+                  d={d}
+                  fill="none"
+                  stroke={ln.color}
+                  strokeWidth={isActive ? 0.011 : 0.006}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  vectorEffect="non-scaling-stroke"
+                  opacity={0.98}
+                  style={{
+                    strokeDasharray: 4,
+                    strokeDashoffset: 4 * (1 - drawProgress),
                     transition: "stroke-width 200ms",
-                    filter: `drop-shadow(0 0 0.004px ${ln.color})`,
                   }}
                 />
               </g>
             );
           })}
 
-          {mounts.map((m, i) => (
-            <g key={`m-${i}`}>
-              <circle
-                cx={m.x}
-                cy={m.y}
-                r={0.018}
-                fill="hsl(var(--accent))"
-                opacity={0.85}
-                style={{ opacity: drawProgress * 0.85 }}
-              />
-              <circle
-                cx={m.x}
-                cy={m.y}
-                r={0.028}
-                fill="none"
-                stroke="hsl(var(--accent))"
-                strokeWidth={0.003}
-                vectorEffect="non-scaling-stroke"
-                opacity={drawProgress * 0.5}
-              />
-            </g>
-          ))}
+          {mounts.map((m, i) => {
+            const p = toImg(m.x, m.y);
+            return (
+              <g key={`m-${i}`} style={{ opacity: drawProgress }}>
+                <circle cx={p.x} cy={p.y} r={0.014} fill="hsl(var(--accent))" opacity={0.85} />
+                <circle
+                  cx={p.x}
+                  cy={p.y}
+                  r={0.024}
+                  fill="none"
+                  stroke="hsl(var(--accent))"
+                  strokeWidth={0.003}
+                  vectorEffect="non-scaling-stroke"
+                  opacity={0.6}
+                />
+              </g>
+            );
+          })}
 
-          {signs.map((s, i) => (
-            <g key={`s-${i}`}>
-              <rect
-                x={s.x - 0.015}
-                y={s.y - 0.015}
-                width={0.03}
-                height={0.03}
-                fill="none"
-                stroke="#fbbf24"
-                strokeWidth={0.004}
-                vectorEffect="non-scaling-stroke"
-                opacity={drawProgress}
-                transform={`rotate(45 ${s.x} ${s.y})`}
-              />
-            </g>
-          ))}
+          {signs.map((s, i) => {
+            const p = toImg(s.x, s.y);
+            return (
+              <g key={`s-${i}`} style={{ opacity: drawProgress }}>
+                <rect
+                  x={p.x - 0.013}
+                  y={p.y - 0.013}
+                  width={0.026}
+                  height={0.026}
+                  fill="none"
+                  stroke="#fbbf24"
+                  strokeWidth={0.004}
+                  vectorEffect="non-scaling-stroke"
+                  transform={`rotate(45 ${p.x} ${p.y})`}
+                />
+              </g>
+            );
+          })}
         </svg>
 
         {loading && (
@@ -314,7 +409,38 @@ function PalmCanvas({
             <div className="absolute inset-x-0 h-1 bg-gradient-to-r from-transparent via-accent to-transparent animate-[scan-line_2.5s_linear_infinite]" />
           </div>
         )}
+
+        {annotations && !palmDetected && (
+          <div className="absolute inset-0 flex items-end justify-center p-4 bg-gradient-to-t from-background/80 to-transparent">
+            <div className="text-center text-xs font-mono uppercase tracking-widest text-amber-400 bg-background/70 px-4 py-2 rounded-full border border-amber-400/30">
+              ⚠ Palm not clearly visible — try a closer, brighter photo
+            </div>
+          </div>
+        )}
       </div>
+
+      {annotations && (
+        <div className="flex flex-wrap items-center gap-2 justify-center text-[10px] font-mono uppercase tracking-widest">
+          <span
+            className={
+              "px-2.5 py-1 rounded-full border " +
+              (quality === "excellent"
+                ? "border-green-500/40 text-green-400"
+                : quality === "good"
+                ? "border-accent/40 text-accent"
+                : "border-amber-400/40 text-amber-400")
+            }
+          >
+            Image: {quality ?? "—"}
+          </span>
+          <span className="px-2.5 py-1 rounded-full border border-border text-foreground/60">
+            Palm {palmDetected ? "locked" : "not detected"}
+          </span>
+          <span className="px-2.5 py-1 rounded-full border border-border text-foreground/60">
+            {lines.length} rekha · {mounts.length} parvat · {signs.length} chinha
+          </span>
+        </div>
+      )}
 
       {lines.length > 0 && (
         <div className="flex flex-wrap gap-2 justify-center">
@@ -323,6 +449,7 @@ function PalmCanvas({
               key={ln.name}
               onMouseEnter={() => setActive(ln.name)}
               onMouseLeave={() => setActive(null)}
+              onClick={() => setActive((a) => (a === ln.name ? null : ln.name))}
               className="px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest border bg-card hover:bg-accent/5 transition-all"
               style={{ borderColor: ln.color, color: ln.color }}
               title={ln.note}
@@ -331,21 +458,11 @@ function PalmCanvas({
               {ln.name}
             </button>
           ))}
-          {mounts.length > 0 && (
-            <span className="px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest border border-accent/40 text-accent/80">
-              ● {mounts.length} mount{mounts.length > 1 ? "s" : ""} detected
-            </span>
-          )}
-          {signs.length > 0 && (
-            <span className="px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest border border-amber-400/40 text-amber-400">
-              ◆ {signs.length} sign{signs.length > 1 ? "s" : ""}
-            </span>
-          )}
         </div>
       )}
 
       {active && (
-        <p className="text-center text-sm text-foreground/70 font-serif italic">
+        <p className="text-center text-sm text-foreground/70 font-serif italic max-w-xl mx-auto">
           {lines.find((l) => l.name === active)?.note}
         </p>
       )}
