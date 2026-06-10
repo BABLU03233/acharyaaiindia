@@ -173,7 +173,6 @@ function PalmCanvas({
   annotations?: Annotations;
   loading: boolean;
 }) {
-  const [active, setActive] = useState<string | null>(null);
   const [drawProgress, setDrawProgress] = useState(0);
 
   useEffect(() => {
