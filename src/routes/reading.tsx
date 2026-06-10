@@ -293,7 +293,7 @@ function PalmCanvas({
           {lines.map((ln) => {
             if (!ln.points?.length) return null;
             const d = smoothPath(ln.points);
-            const isActive = active === ln.name;
+            const isActive = false;
             return (
               <g key={ln.name}>
                 {/* Soft glow */}
