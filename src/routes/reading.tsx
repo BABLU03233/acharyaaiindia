@@ -173,7 +173,6 @@ function PalmCanvas({
   annotations?: Annotations;
   loading: boolean;
 }) {
-  const [active, setActive] = useState<string | null>(null);
   const [drawProgress, setDrawProgress] = useState(0);
 
   useEffect(() => {
@@ -294,7 +293,7 @@ function PalmCanvas({
           {lines.map((ln) => {
             if (!ln.points?.length) return null;
             const d = smoothPath(ln.points);
-            const isActive = active === ln.name;
+            const isActive = false;
             return (
               <g key={ln.name}>
                 {/* Soft glow */}
@@ -403,35 +402,7 @@ function PalmCanvas({
           <span className="px-2.5 py-1 rounded-full border border-border text-foreground/60">
             Palm {palmDetected ? "locked" : "not detected"}
           </span>
-          <span className="px-2.5 py-1 rounded-full border border-border text-foreground/60">
-            {lines.length} rekha · {mounts.length} parvat · {signs.length} chinha
-          </span>
         </div>
-      )}
-
-      {lines.length > 0 && (
-        <div className="flex flex-wrap gap-2 justify-center">
-          {lines.map((ln) => (
-            <button
-              key={ln.name}
-              onMouseEnter={() => setActive(ln.name)}
-              onMouseLeave={() => setActive(null)}
-              onClick={() => setActive((a) => (a === ln.name ? null : ln.name))}
-              className="px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest border bg-card hover:bg-accent/5 transition-all"
-              style={{ borderColor: ln.color, color: ln.color }}
-              title={ln.note}
-            >
-              <span className="inline-block size-2 rounded-full mr-2" style={{ background: ln.color }} />
-              {ln.name}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {active && (
-        <p className="text-center text-sm text-foreground/70 font-serif italic max-w-xl mx-auto">
-          {lines.find((l) => l.name === active)?.note}
-        </p>
       )}
     </section>
   );
