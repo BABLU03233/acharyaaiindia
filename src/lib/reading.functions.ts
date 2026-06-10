@@ -186,6 +186,15 @@ type AskInput = {
 
 type AskResult = { answer: string };
 
+const CHAT_SYSTEM = `${BASE_PERSONA}
+
+CHAT FORMAT RULES (STRICT):
+- Reply as the Acharya speaking ALOUD to the seeker, in plain flowing prose paragraphs.
+- ABSOLUTELY NO markdown, NO JSON, NO code blocks, NO bullet points, NO numbered lists, NO headings, NO stage directions, NO labels like "Acharya:", NO asterisks, NO backticks, NO XML, NO emojis.
+- Do not describe what you are about to do. Just speak the answer directly.
+- 4–8 warm, grounded sentences. Reference the exact mount/rekha/sign from the shastra.
+- Address the seeker as "Beta" or "Putra/Putri" naturally, as a wise elder would.`;
+
 export const askAcharya = createServerFn({ method: "POST" })
   .inputValidator((d: AskInput) => d)
   .handler(async ({ data }): Promise<AskResult> => {
@@ -196,7 +205,7 @@ export const askAcharya = createServerFn({ method: "POST" })
 ${data.context ? `Earlier reading summary:\n${data.context}\n` : ""}
 They now ask: "${data.question}"
 
-Answer in 5-9 sentences as the Acharya, grounded strictly in the Hasta Samudrika Shastra. Reference the specific mount/rekha/sign that supports your answer. If the photo is attached, refer to what you actually see in it (and ignore non-palm background). If the shastra is silent on this exact question, say so plainly and give the closest shastra-grounded guidance. Never mention AI.`;
+Answer as the Acharya in plain spoken prose only — no markdown, no lists, no JSON, no labels. If the photo is attached, refer to what you actually see on the palm (ignore background). If the shastra is silent, say so plainly and give the closest shastra-grounded guidance.`;
 
     const userContent: unknown = hasImage
       ? [
@@ -207,11 +216,59 @@ Answer in 5-9 sentences as the Acharya, grounded strictly in the Hasta Samudrika
 
     const json = await callGateway(
       [
-        { role: "system", content: SYSTEM_PROMPT },
+        { role: "system", content: CHAT_SYSTEM },
         { role: "user", content: userContent },
       ],
       false,
     );
-    const answer = json.choices?.[0]?.message?.content ?? "The shastra is silent on this query at this moment.";
+    let answer: string = json.choices?.[0]?.message?.content ?? "The shastra is silent on this query at this moment.";
+    // Strip any stray markdown/code-fence/JSON artefacts defensively.
+    answer = answer
+      .replace(/```[\s\S]*?```/g, "")
+      .replace(/^\s*[#>*\-]+\s*/gm, "")
+      .replace(/\*\*(.+?)\*\*/g, "$1")
+      .replace(/\*(.+?)\*/g, "$1")
+      .replace(/^\s*(Acharya|Acharya Hasta)\s*:\s*/i, "")
+      .trim();
     return { answer };
+  });
+
+/* ---------------- Palm validation (pre-check before reading) ---------------- */
+
+type ValidateInput = { imageDataUrl: string };
+type ValidateResult = { isPalm: boolean; reason: string };
+
+export const validatePalm = createServerFn({ method: "POST" })
+  .inputValidator((d: ValidateInput) => d)
+  .handler(async ({ data }): Promise<ValidateResult> => {
+    if (!data.imageDataUrl?.startsWith("data:image")) {
+      return { isPalm: false, reason: "No image provided." };
+    }
+    const json = await callGateway(
+      [
+        {
+          role: "system",
+          content:
+            'You are a strict image classifier. Decide whether the photo clearly shows the PALMAR (inner) surface of a single human hand, with the palm open and most of its surface visible, suitable for palm reading. Return ONLY JSON: {"isPalm": true|false, "reason": "<short reason>"}. Reject (isPalm:false) if: the image shows the back of the hand, fingers only, a fist, multiple hands, no hand, an object, animal, drawing, screenshot, dark/blurry/cropped image where the palm is not clearly visible, or anything that is not a real human palm. Be strict.',
+        },
+        {
+          role: "user",
+          content: [
+            { type: "text", text: "Classify this image." },
+            { type: "image_url", image_url: { url: data.imageDataUrl } },
+          ],
+        },
+      ],
+      true,
+    );
+    try {
+      const content = json.choices?.[0]?.message?.content ?? "{}";
+      const parsed = JSON.parse(content) as Partial<ValidateResult>;
+      return {
+        isPalm: Boolean(parsed.isPalm),
+        reason: parsed.reason || (parsed.isPalm ? "Palm detected." : "This does not appear to be a clear palm photo."),
+      };
+    } catch {
+      return { isPalm: false, reason: "Could not verify the image." };
+    }
   });
