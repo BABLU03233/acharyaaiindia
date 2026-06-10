@@ -205,10 +205,10 @@ function CaptureStep({ hand, onComplete }: { hand: "left" | "right"; onComplete:
       <div className="text-center space-y-3">
         <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-accent">Step 2 of 3</span>
         <h1 className="text-3xl md:text-5xl font-serif">
-          Show your <span className="italic text-accent">{hand}</span> palm
+          Click a photo of your <span className="italic text-accent">{hand}</span> palm
         </h1>
-        <p className="text-foreground/60">
-          Capture it live or upload a clear photo — the Acharya will analyse mounts, rekhas and signs automatically.
+        <p className="text-foreground/60 max-w-xl mx-auto">
+          Open your palm flat against a plain background, ensure good lighting, and capture or upload. The Acharya will reject anything that is not a clear palm.
         </p>
       </div>
 
@@ -231,9 +231,17 @@ function CaptureStep({ hand, onComplete }: { hand: "left" | "right"; onComplete:
 
       <div className="relative max-w-2xl mx-auto aspect-[3/4] rounded-3xl overflow-hidden border border-border bg-card shadow-gold-sm">
         {preview ? (
-          <img src={preview} alt="Captured palm" className="absolute inset-0 w-full h-full object-cover" />
+          <>
+            <img src={preview} alt="Captured palm" className="absolute inset-0 w-full h-full object-cover" />
+            {busy && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/60 backdrop-blur-sm gap-4">
+                <div className="size-12 rounded-full border-2 border-accent/30 border-t-accent animate-spin" />
+                <p className="text-sm font-mono uppercase tracking-widest text-accent">{status || "Verifying…"}</p>
+              </div>
+            )}
+          </>
         ) : mode === "camera" ? (
-          error ? (
+          error && !streaming ? (
             <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-8 gap-4">
               <div className="text-accent text-4xl">⚠</div>
               <h3 className="font-serif text-xl">Camera unavailable</h3>
@@ -253,35 +261,17 @@ function CaptureStep({ hand, onComplete }: { hand: "left" | "right"; onComplete:
                 muted
                 className="absolute inset-0 w-full h-full object-cover"
               />
-              <svg
-                className="absolute inset-0 w-full h-full pointer-events-none"
-                viewBox="0 0 300 400"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path
-                  d="M150 380 C 90 380 70 320 70 260 L 70 180 C 70 170 80 165 85 175 L 100 230 L 100 100 C 100 90 115 90 115 100 L 115 200 L 130 80 C 130 70 145 70 145 80 L 145 200 L 160 90 C 160 80 175 80 175 90 L 175 210 L 195 130 C 195 120 210 122 210 132 L 210 240 C 230 240 235 270 230 300 C 225 340 200 380 150 380 Z"
-                  className="text-accent/60"
-                />
-              </svg>
-              <div className="absolute inset-0 overflow-hidden">
-                <div className="animate-[scan-line_2.5s_linear_infinite] h-1/4 w-full bg-gradient-to-b from-transparent via-accent/40 to-transparent" />
-              </div>
-              <div className="absolute top-4 left-4 size-10 border-t-2 border-l-2 border-accent" />
-              <div className="absolute top-4 right-4 size-10 border-t-2 border-r-2 border-accent" />
-              <div className="absolute bottom-4 left-4 size-10 border-b-2 border-l-2 border-accent" />
-              <div className="absolute bottom-4 right-4 size-10 border-b-2 border-r-2 border-accent" />
+              <div className="absolute top-4 left-4 size-10 border-t-2 border-l-2 border-accent/70" />
+              <div className="absolute top-4 right-4 size-10 border-t-2 border-r-2 border-accent/70" />
+              <div className="absolute bottom-4 left-4 size-10 border-b-2 border-l-2 border-accent/70" />
+              <div className="absolute bottom-4 right-4 size-10 border-b-2 border-r-2 border-accent/70" />
               <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-background/80 backdrop-blur px-4 py-2 rounded-full border border-accent/30 text-xs font-mono text-accent uppercase tracking-widest flex items-center gap-2">
                 <span className="size-1.5 bg-green-500 rounded-full animate-pulse" />
-                {streaming ? "Align palm in frame" : "Initializing camera…"}
+                {streaming ? "Plain background · good light" : "Initializing camera…"}
               </div>
             </>
           )
         ) : (
-          // Upload mode
           <button
             onClick={() => fileRef.current?.click()}
             className="absolute inset-0 flex flex-col items-center justify-center text-center p-8 gap-4 hover:bg-accent/5 transition-colors"
@@ -289,7 +279,7 @@ function CaptureStep({ hand, onComplete }: { hand: "left" | "right"; onComplete:
             <div className="text-accent text-5xl">📷</div>
             <h3 className="font-serif text-2xl">Upload your palm photo</h3>
             <p className="text-foreground/60 text-sm max-w-sm">
-              Tap to choose — a clear, well-lit photo of your open {hand} palm gives the sharpest reading.
+              Tap to choose — open {hand} palm, plain background, well-lit.
             </p>
             <span className="mt-2 bg-accent text-accent-foreground px-6 py-3 rounded-full font-bold text-sm">
               Choose photo
@@ -306,8 +296,10 @@ function CaptureStep({ hand, onComplete }: { hand: "left" | "right"; onComplete:
         )}
       </div>
 
-      {error && mode === "upload" && (
-        <p className="text-center text-sm text-destructive">{error}</p>
+      {error && (
+        <div className="max-w-xl mx-auto p-4 rounded-2xl border border-destructive/40 bg-destructive/5 text-center text-sm text-destructive">
+          {error}
+        </div>
       )}
 
       <div className="text-center">
@@ -317,7 +309,7 @@ function CaptureStep({ hand, onComplete }: { hand: "left" | "right"; onComplete:
             disabled={!streaming || busy}
             className="bg-accent text-accent-foreground px-10 py-4 rounded-full font-bold text-lg hover:scale-105 transition-all shadow-gold disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            {busy ? "Capturing…" : "Capture & Analyse"}
+            {busy ? status || "Verifying…" : "Capture photo"}
           </button>
         ) : (
           <button
@@ -325,7 +317,7 @@ function CaptureStep({ hand, onComplete }: { hand: "left" | "right"; onComplete:
             disabled={busy}
             className="bg-accent text-accent-foreground px-10 py-4 rounded-full font-bold text-lg hover:scale-105 transition-all shadow-gold disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            {busy ? "Reading…" : "Upload & Analyse"}
+            {busy ? status || "Verifying…" : "Choose photo"}
           </button>
         )}
       </div>
