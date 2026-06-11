@@ -7,9 +7,13 @@ import { validatePalm } from "@/lib/reading.functions";
 export const Route = createFileRoute("/scan")({
   head: () => ({
     meta: [
-      { title: "Palm Scan — Hasta AI" },
-      { name: "description", content: "Upload or capture your palm. The Acharya reads it instantly using the full Hasta Samudrika Shastra." },
+      { title: "Scan Your Palm — Free AI Palm Reading | Hasta AI" },
+      { name: "description", content: "Upload or capture your palm. The Acharya reads it instantly using the full Hasta Samudrika Shastra. Free and unlimited." },
+      { property: "og:title", content: "Scan Your Palm — Free AI Palm Reading | Hasta AI" },
+      { property: "og:description", content: "Upload or capture your palm and get an instant AI reading rooted in Hasta Samudrika Shastra." },
+      { property: "og:url", content: "https://hasta-aura-reveal.lovable.app/scan" },
     ],
+    links: [{ rel: "canonical", href: "https://hasta-aura-reveal.lovable.app/scan" }],
   }),
   component: ScanFlow,
 });

@@ -8,8 +8,27 @@ import { generateReading, askAcharya } from "@/lib/reading.functions";
 export const Route = createFileRoute("/reading")({
   head: () => ({
     meta: [
-      { title: "Your Destiny Reading — Hasta AI" },
-      { name: "description", content: "Your personalized AI palm reading rooted in Hasta Samudrika Shastra." },
+      { title: "Your Destiny Reading — Hasta AI Palmistry" },
+      { name: "description", content: "Your personalized AI palm reading rooted in Hasta Samudrika Shastra — lines, mounts, signs and a full destiny analysis." },
+      { property: "og:title", content: "Your Destiny Reading — Hasta AI Palmistry" },
+      { property: "og:description", content: "A personalized AI palm reading drawn from your own palm and the Hasta Samudrika Shastra." },
+      { property: "og:url", content: "https://hasta-aura-reveal.lovable.app/reading" },
+    ],
+    links: [{ rel: "canonical", href: "https://hasta-aura-reveal.lovable.app/reading" }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Service",
+          name: "AI Palm Reading",
+          serviceType: "Palmistry",
+          provider: { "@type": "Organization", name: "Hasta AI", url: "https://hasta-aura-reveal.lovable.app/" },
+          description: "Personalized AI palm reading rooted in Hasta Samudrika Shastra, covering destiny, wealth, love and karma.",
+          areaServed: "Worldwide",
+          offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+        }),
+      },
     ],
   }),
   component: Reading,
@@ -227,7 +246,7 @@ function PalmCanvas({
   return (
     <section className="space-y-4">
       <div className="relative rounded-3xl overflow-hidden border border-border bg-card shadow-gold-sm">
-        <img src={image} alt="Your palm" className="w-full h-auto block" />
+        <img src={image} alt="Your scanned palm with lines auto-traced by Hasta AI" className="w-full h-auto block" />
         <svg
           className="absolute inset-0 w-full h-full pointer-events-none"
           viewBox="0 0 1 1"

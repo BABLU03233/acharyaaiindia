@@ -11,14 +11,53 @@ import { Testimonials } from "@/components/site/Testimonials";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Hasta AI — Your Palm Holds Secrets AI Can Reveal" },
+      { title: "Hasta AI — AI Palm Reading from Hasta Samudrika Shastra" },
       {
         name: "description",
         content:
-          "Cinematic AI palmistry rooted in Indian Hasta Samudrika Shastra. Scan your palm and unlock a personalized destiny reading.",
+          "Scan your palm with AI and get a personalized destiny reading rooted in the ancient Indian science of Hasta Samudrika Shastra. Free, unlimited.",
       },
-      { property: "og:title", content: "Hasta AI — Ancient Indian Palmistry, Powered by AI" },
-      { property: "og:description", content: "Scan your palm. Unlock your future. Premium AI-powered destiny readings." },
+      { property: "og:title", content: "Hasta AI — AI Palm Reading from Hasta Samudrika Shastra" },
+      { property: "og:description", content: "Scan your palm. Unlock your future. Free AI-powered destiny readings rooted in ancient Indian palmistry." },
+      { property: "og:url", content: "https://hasta-aura-reveal.lovable.app/" },
+      { property: "twitter:title", content: "Hasta AI — AI Palm Reading from Hasta Samudrika Shastra" },
+      { property: "twitter:description", content: "Scan your palm. Unlock your future. Free AI-powered destiny readings." },
+    ],
+    links: [{ rel: "canonical", href: "https://hasta-aura-reveal.lovable.app/" }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          name: "Hasta AI",
+          url: "https://hasta-aura-reveal.lovable.app/",
+          description: "AI-powered palm reading rooted in Hasta Samudrika Shastra.",
+        }),
+      },
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          name: "Hasta AI",
+          url: "https://hasta-aura-reveal.lovable.app/",
+        }),
+      },
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: [
+            { "@type": "Question", name: "Is Hasta AI accurate?", acceptedAnswer: { "@type": "Answer", text: "Our AI is trained on principles of Hasta Samudrika Shastra, the ancient Indian science of palmistry, combined with modern computer vision. Readings should be treated as spiritual guidance and reflection — not absolute prediction." } },
+            { "@type": "Question", name: "Do you store my palm image?", acceptedAnswer: { "@type": "Answer", text: "Your palm scans are processed securely and never shared. You can delete your scan history anytime from your account." } },
+            { "@type": "Question", name: "Which hand should I scan?", acceptedAnswer: { "@type": "Answer", text: "Traditionally the dominant hand shows your present and future, while the non-dominant hand shows your inherent traits. You can choose either at the start of the scan." } },
+            { "@type": "Question", name: "Will it tell me when I will die or about medical issues?", acceptedAnswer: { "@type": "Answer", text: "No. Hasta AI never provides death predictions or medical diagnoses. We focus on emotional, spiritual, career and relationship guidance." } },
+            { "@type": "Question", name: "What payment methods do you accept?", acceptedAnswer: { "@type": "Answer", text: "Hasta AI is completely free. No payment is required." } },
+          ],
+        }),
+      },
     ],
   }),
   component: Landing,
