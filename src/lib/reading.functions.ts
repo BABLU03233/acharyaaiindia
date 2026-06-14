@@ -523,11 +523,21 @@ export const askAcharya = createServerFn({ method: "POST" })
           )
         : "");
 
+    const lang = data.language === "hindi" || data.language === "telugu" ? data.language : "english";
+    const langDirective =
+      lang === "hindi"
+        ? "REPLY ONLY IN NATURAL CONVERSATIONAL HINDI (Devanagari script). Do not use English sentences."
+        : lang === "telugu"
+          ? "REPLY ONLY IN NATURAL CONVERSATIONAL TELUGU (Telugu script). Do not use English sentences."
+          : "Reply in warm conversational English. A sprinkling of Sanskrit terms (rekha, parvat) is fine.";
+
     const userText = `The seeker has already received a reading of their ${data.hand} palm.
 ${data.context ? `Earlier reading summary:\n${data.context}\n` : ""}${annotationContext ? `Observed palm evidence:\n${annotationContext}\n` : ""}${birthBlock}
 They now ask: "${data.question}"
 
-Answer in 3–4 sentences MAXIMUM, plain spoken prose, no lists or markdown. Do NOT recap the whole reading or bio-data — answer ONLY this question. If it concerns timing (marriage, child, job, money, travel, health, etc.), you MUST give a concrete year or tight month-year window (e.g. "around March 2028" or "between late 2026 and mid-2027"). Today is ${new Date().toISOString().slice(0, 10)} — predicted dates must be in the future. Cite ONE rekha/parvat in a short phrase as the source. If birth details are present, factor the Mulank/Bhagyank graha dasha into the year. Only refuse a date if the relevant rekha is genuinely invisible, and then ask for a clearer rescan in one sentence.`;
+${langDirective}
+
+Reply in 2–4 short, natural, human sentences — warm spoken tone, no lists, no markdown, no labels. Do NOT recap the whole reading or bio-data; answer ONLY this exact question. If it has any "when" element (marriage, soulmate meeting, child, job change, money, travel, foreign settlement, health event, court case, business launch, anything timed), you MUST give a concrete year or tight month-year window (e.g. "around March 2028" or "between late 2026 and mid-2027"). For soulmate / partner questions, also describe the person in one vivid line (nature, complexion tendency, how they enter life) using Vivah Rekha + Shukra/Chandra parvat. Today is ${new Date().toISOString().slice(0, 10)} — predicted dates must be in the future. Cite ONE rekha/parvat in a short phrase as the source. If birth details are present, factor the Mulank/Bhagyank graha dasha into the year. Only refuse a date if the rekha is truly invisible, then ask for a clearer rescan in one sentence.`;
 
     const userContent: unknown = hasImage
       ? [
