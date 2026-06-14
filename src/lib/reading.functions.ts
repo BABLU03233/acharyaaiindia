@@ -50,6 +50,7 @@ type AskInput = {
   pob?: string;
   name?: string;
   gender?: "male" | "female" | "other";
+  language?: "english" | "hindi" | "telugu";
 };
 
 type AskResult = { answer: string };
