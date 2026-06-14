@@ -1,8 +1,8 @@
-# Hasta AI
+# Acharya AI
 
 > Ancient Indian palmistry (Hasta Samudrika Shastra) powered by AI. Scan your palm and receive a personalized cinematic destiny reading.
 
 ## Pages
-- [Home](/): Landing — what Hasta AI does, how it works, pricing, FAQ
+- [Home](/): Landing — what Acharya AI does, how it works, pricing, FAQ
 - [Palm Scan](/scan): Start a palm reading by choosing a hand and capturing your palm
 - [Destiny Reading](/reading): Sample AI-generated reading and pricing unlock

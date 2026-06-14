@@ -5,7 +5,7 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Hasta AI — Black + Gold luxury design system.
+ * Acharya AI — Black + Gold luxury design system.
  * All colors live here. Components should never hardcode hex/rgb.
  */
 
@@ -72,7 +72,7 @@
 :root {
   --radius: 1rem;
 
-  /* Hasta AI luxury palette */
+  /* Acharya AI luxury palette */
   --background: oklch(0.12 0.005 60);
   --foreground: oklch(0.97 0.01 80);
 

@@ -2,7 +2,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 
 const FAQS = [
   {
-    q: "Is Hasta AI accurate?",
+    q: "Is Acharya AI accurate?",
     a: "Our AI is trained on principles of Hasta Samudrika Shastra, the ancient Indian science of palmistry, combined with modern computer vision. Readings should be treated as spiritual guidance and reflection — not absolute prediction.",
   },
   {
@@ -15,7 +15,7 @@ const FAQS = [
   },
   {
     q: "Will it tell me when I will die or about medical issues?",
-    a: "No. Hasta AI never provides death predictions or medical diagnoses. We focus on emotional, spiritual, career and relationship guidance.",
+    a: "No. Acharya AI never provides death predictions or medical diagnoses. We focus on emotional, spiritual, career and relationship guidance.",
   },
   {
     q: "What payment methods do you accept?",

@@ -6,7 +6,7 @@ export function SiteFooter() {
           <span className="size-6 border border-accent rounded-full flex items-center justify-center">
             <span className="size-2 bg-accent rounded-full" />
           </span>
-          <span className="font-serif text-lg font-bold tracking-tight">HASTA AI</span>
+          <span className="font-serif text-lg font-bold tracking-tight">ACHARYA AI</span>
         </div>
         <div className="text-[10px] font-bold uppercase tracking-[0.3em] text-foreground/30 text-center">
           © 2026 Hasta Samudrika Labs · For guidance & reflection only · No medical or death predictions

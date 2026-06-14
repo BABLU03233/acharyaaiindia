@@ -8,7 +8,7 @@ export function SiteNav() {
           <span className="size-8 rounded-full border border-accent flex items-center justify-center">
             <span className="size-4 bg-accent rounded-full animate-pulse" />
           </span>
-          <span className="font-serif text-xl font-bold tracking-tight">HASTA AI</span>
+          <span className="font-serif text-xl font-bold tracking-tight">ACHARYA AI</span>
         </Link>
         <div className="hidden md:flex items-center gap-8 text-sm font-medium text-foreground/60">
           <a href="/#shastra" className="hover:text-accent transition-colors">The Shastra</a>
