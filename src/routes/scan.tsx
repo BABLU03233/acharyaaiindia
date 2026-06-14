@@ -61,7 +61,9 @@ function ScanFlow() {
               setHand(h);
               try {
                 sessionStorage.setItem("hasta:hand", h);
-              } catch {}
+              } catch {
+                return;
+              }
               setStep("capture");
             }}
           />
