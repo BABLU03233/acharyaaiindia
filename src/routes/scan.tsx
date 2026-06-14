@@ -291,7 +291,7 @@ function CaptureStep({ hand, onComplete }: { hand: "left" | "right"; onComplete:
           Click a photo of your <span className="italic text-accent">{hand}</span> palm
         </h1>
         <p className="text-foreground/60 max-w-xl mx-auto">
-          Open your palm flat against a plain background, ensure good lighting, and capture or upload. The Acharya will reject anything that is not a clear palm.
+          Hold your open {hand} palm in front of the camera against a plain background. The Acharya will detect it in real time and capture automatically — nothing else will be accepted.
         </p>
       </div>
 
