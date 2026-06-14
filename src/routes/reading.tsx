@@ -605,6 +605,7 @@ function AcharyaChat({
           tob: tob || undefined,
           pob: pob || undefined,
           gender: gender || undefined,
+          language,
         },
       });
       setMsgs((m) => [...m, { role: "acharya", text: r.answer }]);
