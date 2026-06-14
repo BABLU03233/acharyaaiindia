@@ -334,7 +334,7 @@ function sanitizeAnswer(answer: string) {
   let cleaned = answer
     .replace(/```[a-zA-Z]*\n?/g, "")
     .replace(/```/g, "")
-    .replace(/^\s*[#>*\-]+\s*/gm, "")
+    .replace(/^\s*[#>*-]+\s*/gm, "")
     .replace(/\*\*(.+?)\*\*/g, "$1")
     .replace(/\*(.+?)\*/g, "$1")
     .replace(/`([^`]+)`/g, "$1")
