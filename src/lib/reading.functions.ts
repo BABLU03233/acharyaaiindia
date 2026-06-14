@@ -116,14 +116,14 @@ REMINDERS:
 - Scores must reflect what the rekhas actually say in the photo and the shastra.`;
 }
 
-async function callGateway(messages: unknown[], json: boolean) {
+async function callGateway(messages: unknown[], json: boolean, model = "google/gemini-2.5-pro") {
   const apiKey = process.env.LOVABLE_API_KEY;
   if (!apiKey) throw new Error("LOVABLE_API_KEY not configured");
   const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "google/gemini-2.5-pro",
+      model,
       messages,
       ...(json ? { response_format: { type: "json_object" } } : {}),
     }),
