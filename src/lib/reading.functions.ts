@@ -262,16 +262,29 @@ Answer as the Acharya in plain spoken prose only — no markdown, no lists, no J
         { role: "user", content: userContent },
       ],
       false,
+      "google/gemini-2.5-flash",
     );
     let answer: string = json.choices?.[0]?.message?.content ?? "The shastra is silent on this query at this moment.";
-    // Strip any stray markdown/code-fence/JSON artefacts defensively.
+    // Strip code fences, JSON wrappers, markdown, role labels — never let raw code reach the seeker.
     answer = answer
-      .replace(/```[\s\S]*?```/g, "")
+      .replace(/```[a-zA-Z]*\n?/g, "")
+      .replace(/```/g, "")
       .replace(/^\s*[#>*\-]+\s*/gm, "")
       .replace(/\*\*(.+?)\*\*/g, "$1")
       .replace(/\*(.+?)\*/g, "$1")
-      .replace(/^\s*(Acharya|Acharya Hasta)\s*:\s*/i, "")
+      .replace(/`([^`]+)`/g, "$1")
+      .replace(/^\s*(Acharya|Acharya Hasta|Assistant|AI|Response)\s*:\s*/gim, "")
       .trim();
+    // If the model still wrapped the reply in JSON, extract the longest string value.
+    if (answer.startsWith("{") || answer.startsWith("[")) {
+      try {
+        const obj = JSON.parse(answer);
+        const collect = (v: unknown): string[] =>
+          typeof v === "string" ? [v] : Array.isArray(v) ? v.flatMap(collect) : v && typeof v === "object" ? Object.values(v).flatMap(collect) : [];
+        const strings = collect(obj).filter((s) => s.length > 40);
+        if (strings.length) answer = strings.join("\n\n");
+      } catch { /* leave as-is */ }
+    }
     return { answer };
   });
 
