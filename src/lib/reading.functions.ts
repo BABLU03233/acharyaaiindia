@@ -526,7 +526,7 @@ export const askAcharya = createServerFn({ method: "POST" })
 ${data.context ? `Earlier reading summary:\n${data.context}\n` : ""}${annotationContext ? `Observed palm evidence:\n${annotationContext}\n` : ""}${birthBlock}
 They now ask: "${data.question}"
 
-Answer as the Acharya in plain spoken prose only. Ground EVERY claim in the Hasta Samudrika Shastra text above. Refer to the exact rekha, parvat, sign, or visible evidence supplied to you. If birth details are present, weave the Mulank/Bhagyank graha into the prediction where the shastra supports that correlation. If the palm evidence is insufficient, admit that clearly and ask for a clearer palm scan rather than guessing.`;
+Answer in 3–4 sentences MAXIMUM, plain spoken prose, no lists or markdown. Do NOT recap the whole reading or bio-data — answer ONLY this question. If it concerns timing (marriage, child, job, money, travel, health, etc.), you MUST give a concrete year or tight month-year window (e.g. "around March 2028" or "between late 2026 and mid-2027"). Today is ${new Date().toISOString().slice(0, 10)} — predicted dates must be in the future. Cite ONE rekha/parvat in a short phrase as the source. If birth details are present, factor the Mulank/Bhagyank graha dasha into the year. Only refuse a date if the relevant rekha is genuinely invisible, and then ask for a clearer rescan in one sentence.`;
 
     const userContent: unknown = hasImage
       ? [
