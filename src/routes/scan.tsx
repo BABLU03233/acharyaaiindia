@@ -111,6 +111,11 @@ function CaptureStep({ hand, onComplete }: { hand: "left" | "right"; onComplete:
   const [preview, setPreview] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<string>("");
+  const [liveState, setLiveState] = useState<"searching" | "detected" | "rejected">("searching");
+  const [liveMsg, setLiveMsg] = useState<string>("Searching for your palm…");
+  const consecutiveDetectsRef = useRef(0);
+  const scanningRef = useRef(false);
+  const completedRef = useRef(false);
 
   useEffect(() => {
     if (mode !== "camera") return;
@@ -140,6 +145,78 @@ function CaptureStep({ hand, onComplete }: { hand: "left" | "right"; onComplete:
     };
   }, [mode]);
 
+  const snapshotDataUrl = (maxDim = 720, quality = 0.7): string | null => {
+    const video = videoRef.current;
+    if (!video || !video.videoWidth) return null;
+    const w = video.videoWidth;
+    const h = video.videoHeight;
+    const scale = Math.min(1, maxDim / Math.max(w, h));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(w * scale);
+    canvas.height = Math.round(h * scale);
+    const ctx = canvas.getContext("2d")!;
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    return canvas.toDataURL("image/jpeg", quality);
+  };
+
+  // Realtime palm detection loop while camera is streaming and nothing captured yet.
+  useEffect(() => {
+    if (mode !== "camera" || !streaming || preview || busy) return;
+    let cancelled = false;
+    const loop = async () => {
+      while (!cancelled && !completedRef.current) {
+        if (scanningRef.current) {
+          await new Promise((r) => setTimeout(r, 300));
+          continue;
+        }
+        const frame = snapshotDataUrl(560, 0.6);
+        if (!frame) {
+          await new Promise((r) => setTimeout(r, 400));
+          continue;
+        }
+        scanningRef.current = true;
+        try {
+          const v = await verify({ data: { imageDataUrl: frame } });
+          if (cancelled || completedRef.current) break;
+          if (v.isPalm) {
+            consecutiveDetectsRef.current += 1;
+            setLiveState("detected");
+            setLiveMsg(
+              consecutiveDetectsRef.current >= 2
+                ? "Palm locked · capturing…"
+                : "Palm detected · hold steady…",
+            );
+            if (consecutiveDetectsRef.current >= 2) {
+              completedRef.current = true;
+              const full = snapshotDataUrl(1280, 0.88);
+              if (full) {
+                setPreview(full);
+                setBusy(true);
+                setStatus("Verifying your palm…");
+                await handAndGo(full);
+              }
+              break;
+            }
+          } else {
+            consecutiveDetectsRef.current = 0;
+            setLiveState("rejected");
+            setLiveMsg(v.reason || "Not a clear palm — show your open palm in plain background.");
+          }
+        } catch {
+          // ignore transient errors in live loop
+        } finally {
+          scanningRef.current = false;
+        }
+        await new Promise((r) => setTimeout(r, 1800));
+      }
+    };
+    loop();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode, streaming, preview, busy]);
+
   const handAndGo = async (dataUrl: string) => {
     setBusy(true);
     setError(null);
@@ -148,11 +225,13 @@ function CaptureStep({ hand, onComplete }: { hand: "left" | "right"; onComplete:
       const v = await verify({ data: { imageDataUrl: dataUrl } });
       if (!v.isPalm) {
         setError(
-          `${v.reason} Please take a clear photo of your open ${hand} palm against a plain background, well-lit, with all five fingers visible.`,
+          `${v.reason} Please show your open ${hand} palm against a plain background, well-lit, with all five fingers visible.`,
         );
         setPreview(null);
         setBusy(false);
         setStatus("");
+        completedRef.current = false;
+        consecutiveDetectsRef.current = 0;
         return;
       }
       try {
