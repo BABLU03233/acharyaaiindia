@@ -522,6 +522,7 @@ function AcharyaChat({
   const [tob, setTob] = useState("");
   const [pob, setPob] = useState("");
   const [gender, setGender] = useState<"" | "male" | "female" | "other">("");
+  const [language, setLanguage] = useState<"english" | "hindi" | "telugu">("english");
   const [detailsOpen, setDetailsOpen] = useState(true);
   const hasDetails = Boolean(dob || name || pob);
 
@@ -537,6 +538,8 @@ function AcharyaChat({
         setGender(b.gender ?? "");
         if (b.dob) setDetailsOpen(false);
       }
+      const lang = localStorage.getItem("hasta:lang") as "english" | "hindi" | "telugu" | null;
+      if (lang === "english" || lang === "hindi" || lang === "telugu") setLanguage(lang);
     } catch {
       return;
     }
@@ -602,6 +605,7 @@ function AcharyaChat({
           tob: tob || undefined,
           pob: pob || undefined,
           gender: gender || undefined,
+          language,
         },
       });
       setMsgs((m) => [...m, { role: "acharya", text: r.answer }]);
@@ -752,6 +756,34 @@ function AcharyaChat({
                   </button>
                 </div>
               )}
+            </div>
+
+            <div className="px-5 pt-2 pb-1 flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold text-foreground/50">
+              <span>Language</span>
+              <div className="flex gap-1">
+                {(["english", "hindi", "telugu"] as const).map((l) => (
+                  <button
+                    key={l}
+                    type="button"
+                    onClick={() => {
+                      setLanguage(l);
+                      try {
+                        localStorage.setItem("hasta:lang", l);
+                      } catch {
+                        /* ignore */
+                      }
+                    }}
+                    className={
+                      "px-2.5 py-1 rounded-full border transition-all " +
+                      (language === l
+                        ? "border-accent bg-accent/15 text-accent"
+                        : "border-border text-foreground/60 hover:border-accent/60")
+                    }
+                  >
+                    {l === "english" ? "EN" : l === "hindi" ? "हिं" : "తె"}
+                  </button>
+                ))}
+              </div>
             </div>
 
             {msgs.length <= 1 && (
