@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import shastraText from "./knowledge/hasta-samudrika-shastra.txt?raw";
-import hanumatPrashnaText from "./knowledge/hanumat-jyotisham-prashna.txt?raw";
+import hanumatPrashnaText from "./knowledge/knowledge/hanumat-jyotisham-prashna.txt?raw".replace("knowledge/knowledge/","knowledge/");
+import samplePalmistryText from "./knowledge/sample-palmistry.txt?raw";
 
 type Section = { title: string; body: string };
 type Point = { x: number; y: number };
