@@ -60,6 +60,7 @@ type ValidateResult = { isPalm: boolean; reason: string };
 type ScanFrameResult = { isPalm: boolean; reason: string; annotations: Annotations };
 
 const KNOWLEDGE = shastraText;
+const PRASHNA_KNOWLEDGE = hanumatPrashnaText;
 const EMPTY_ANNOTATIONS: Annotations = {
   palmDetected: false,
   palmBox: { x: 0, y: 0, w: 1, h: 1 },
