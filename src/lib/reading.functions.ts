@@ -62,6 +62,7 @@ type ScanFrameResult = { isPalm: boolean; reason: string; annotations: Annotatio
 
 const KNOWLEDGE = shastraText;
 const PRASHNA_KNOWLEDGE = hanumatPrashnaText;
+const SAMPLE_KNOWLEDGE = samplePalmistryText;
 const EMPTY_ANNOTATIONS: Annotations = {
   palmDetected: false,
   palmBox: { x: 0, y: 0, w: 1, h: 1 },
