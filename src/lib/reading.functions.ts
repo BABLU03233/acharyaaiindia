@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import shastraText from "./knowledge/hasta-samudrika-shastra.txt?raw";
+import hanumatPrashnaText from "./knowledge/hanumat-jyotisham-prashna.txt?raw";
 
 type Section = { title: string; body: string };
 type Point = { x: number; y: number };
