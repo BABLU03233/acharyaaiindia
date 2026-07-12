@@ -10,7 +10,7 @@ export function LiveTicker() {
   const doubled = [...ITEMS, ...ITEMS];
   return (
     <div className="w-full bg-accent/5 border-y border-border py-2 overflow-hidden">
-      <div className="flex gap-12 whitespace-nowrap animate-[marquee_40s_linear_infinite] w-max">
+      <div className="flex gap-12 whitespace-nowrap animate-[marquee_40s_linear_infinite] w-max hover:[animation-play-state:paused]">
         {doubled.map((t, i) => (
           <span
             key={i}

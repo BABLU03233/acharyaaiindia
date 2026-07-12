@@ -25,7 +25,7 @@ const FAQS = [
 
 export function FAQ() {
   return (
-    <section className="py-24 max-w-3xl mx-auto">
+    <section id="faq" className="py-24 max-w-3xl mx-auto">
       <div className="text-center mb-12 space-y-4">
         <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-accent">Inquiries</span>
         <h2 className="text-4xl md:text-5xl font-serif">Questions seekers ask</h2>

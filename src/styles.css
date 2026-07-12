@@ -135,6 +135,9 @@
   * {
     border-color: var(--color-border);
   }
+  html {
+    scroll-behavior: smooth;
+  }
   html, body {
     background-color: var(--color-background);
     color: var(--color-foreground);
@@ -158,4 +161,16 @@
   .bg-aura { background-image: var(--gradient-aura); }
   .shadow-gold { box-shadow: var(--shadow-gold); }
   .shadow-gold-sm { box-shadow: var(--shadow-gold-sm); }
+  .soft-card {
+    background: linear-gradient(135deg, color-mix(in srgb, var(--card) 92%, transparent), color-mix(in srgb, var(--card) 80%, var(--accent) 8%));
+    box-shadow: 0 20px 40px -20px color-mix(in srgb, var(--accent) 20%, transparent);
+  }
+  .glass-panel {
+    backdrop-filter: blur(20px);
+    background: color-mix(in srgb, var(--card) 85%, transparent);
+  }
+  .section-surface {
+    border: 1px solid color-mix(in srgb, var(--border) 90%, transparent);
+    background: color-mix(in srgb, var(--card) 70%, transparent);
+  }
 }

@@ -382,18 +382,33 @@ function CaptureStep({ hand, onComplete }: { hand: "left" | "right"; onComplete:
 
   const onFileChosen = async (file: File | null) => {
     if (!file) return;
+    setError(null);
     if (!file.type.startsWith("image/")) {
-      setError("Please choose an image file.");
+      setError("Please choose an image file (JPG, PNG, etc.).");
+      return;
+    }
+    if (file.size > 50 * 1024 * 1024) {
+      setError("File is too large. Please choose an image under 50MB.");
       return;
     }
     setBusy(true);
+    setStatus("Loading your image…");
     try {
-      const dataUrl = await compressToDataUrl(file);
+      const dataUrl = await compressToDataUrl(file, 1280, 0.88);
       setPreview(dataUrl);
+      setStatus("Analyzing the palm…");
       await handAndGo(dataUrl);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not read the image");
+      setError(e instanceof Error ? e.message : "Could not read the image. Try a different file.");
       setBusy(false);
+      setStatus("");
+    }
+  };
+
+  const triggerFileInput = () => {
+    if (fileRef.current) {
+      fileRef.current.value = ""; // Reset input so same file can be selected again
+      fileRef.current.click();
     }
   };
 
@@ -411,6 +426,21 @@ function CaptureStep({ hand, onComplete }: { hand: "left" | "right"; onComplete:
           live scanner will trace the visible rekhas in real time and reject anything that is not a
           clear palm.
         </p>
+      </div>
+
+      <div className="mx-auto max-w-2xl rounded-[28px] border border-border bg-card/70 p-4 md:p-5">
+        <div className="mb-3 flex items-center justify-between text-[10px] font-semibold uppercase tracking-[0.3em] text-foreground/45">
+          <span>Progress</span>
+          <span>2 / 3</span>
+        </div>
+        <div className="h-2 w-full rounded-full bg-background/70">
+          <div className="h-2 w-2/3 rounded-full bg-accent" />
+        </div>
+        <div className="mt-4 grid gap-2 text-sm text-foreground/70 sm:grid-cols-3">
+          <div className="rounded-2xl border border-border bg-background/40 p-3">Choose the hand</div>
+          <div className="rounded-2xl border border-accent/30 bg-accent/10 p-3">Capture the palm</div>
+          <div className="rounded-2xl border border-border bg-background/40 p-3">Receive the reading</div>
+        </div>
       </div>
 
       {/* Mode toggle */}
@@ -511,7 +541,7 @@ function CaptureStep({ hand, onComplete }: { hand: "left" | "right"; onComplete:
           )
         ) : (
           <button
-            onClick={() => fileRef.current?.click()}
+            onClick={triggerFileInput}
             className="absolute inset-0 flex flex-col items-center justify-center text-center p-8 gap-4 hover:bg-accent/5 transition-colors"
           >
             <div className="text-accent text-5xl">📷</div>
@@ -530,6 +560,7 @@ function CaptureStep({ hand, onComplete }: { hand: "left" | "right"; onComplete:
               capture="environment"
               className="hidden"
               onChange={(e) => onFileChosen(e.target.files?.[0] ?? null)}
+              aria-label="Upload palm image"
             />
           </button>
         )}
@@ -552,7 +583,7 @@ function CaptureStep({ hand, onComplete }: { hand: "left" | "right"; onComplete:
           </button>
         ) : (
           <button
-            onClick={() => fileRef.current?.click()}
+            onClick={triggerFileInput}
             disabled={busy}
             className="bg-accent text-accent-foreground px-10 py-4 rounded-full font-bold text-lg hover:scale-105 transition-all shadow-gold disabled:opacity-40 disabled:cursor-not-allowed"
           >

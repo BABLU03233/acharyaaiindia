@@ -138,10 +138,14 @@ function Reading() {
             <span className="size-1.5 bg-accent rounded-full animate-pulse" />
             Synthesized {new Date().toLocaleDateString()} · Hasta Samudrika Shastra
           </div>
-          {data?.summary && (
-            <p className="max-w-2xl mx-auto font-serif italic text-lg text-foreground/80 pt-4">
-              "{data.summary}"
-            </p>
+          {data?.summary ? (
+            <div className="mx-auto max-w-2xl rounded-[28px] border border-accent/20 bg-card/70 p-6 shadow-gold-sm">
+              <p className="font-serif italic text-lg text-foreground/80">“{data.summary}”</p>
+            </div>
+          ) : (
+            <div className="mx-auto max-w-2xl rounded-[28px] border border-border bg-card/60 p-6 text-sm text-foreground/60">
+              The reading is being composed now. Once the AI finishes its synthesis, your full destiny reading will appear here.
+            </div>
           )}
         </div>
 

@@ -185,6 +185,36 @@ function Landing() {
         </section>
 
         {/* ───────── Mapping the Rekhas ───────── */}
+        <section className="py-24">
+          <div className="section-surface rounded-[32px] p-8 md:p-10">
+            <div className="text-center max-w-2xl mx-auto mb-10 space-y-4">
+              <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-accent">Why the experience feels different</span>
+              <h2 className="text-4xl md:text-5xl font-serif">Grounded guidance, not generic fortune-telling</h2>
+            </div>
+            <div className="grid md:grid-cols-3 gap-4">
+              {[
+                {
+                  title: "Thoughtful pacing",
+                  text: "The flow feels calm, clear, and guided from scan to reading instead of rushed or overloaded.",
+                },
+                {
+                  title: "Visual clarity",
+                  text: "Every step is designed to feel premium, readable, and easy to follow on mobile or desktop.",
+                },
+                {
+                  title: "Human-centered insight",
+                  text: "The guidance is framed as reflection and spiritual direction, not fear-based prediction.",
+                },
+              ].map((item) => (
+                <div key={item.title} className="rounded-2xl border border-border bg-background/40 p-6">
+                  <h3 className="font-serif text-xl mb-2">{item.title}</h3>
+                  <p className="text-sm leading-relaxed text-foreground/60">{item.text}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
         <section id="shastra" className="py-24">
           <div className="text-center max-w-2xl mx-auto mb-16 space-y-4">
             <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-accent">Ancient meets Neural</span>
