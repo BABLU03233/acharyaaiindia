@@ -14,7 +14,7 @@ export function LiveTicker() {
         {doubled.map((t, i) => (
           <span
             key={i}
-            className="font-mono text-[10px] uppercase tracking-widest text-accent/60 flex items-center gap-2"
+            className="font-mono text-[10px] uppercase tracking-widest text-accent/90 flex items-center gap-2"
           >
             <span className="size-1.5 bg-green-500 rounded-full" /> {t}
           </span>

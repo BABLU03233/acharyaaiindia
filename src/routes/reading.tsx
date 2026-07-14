@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { SiteNav } from "@/components/site/Nav";
 import { SiteFooter } from "@/components/site/Footer";
+import { OmParallax } from "@/components/site/OmParallax";
 import { generateReading, askAcharya } from "@/lib/reading.functions";
 
 export const Route = createFileRoute("/reading")({
@@ -84,6 +85,8 @@ function Reading() {
   const [hand, setHand] = useState<"left" | "right">("right");
   const [palmImage, setPalmImage] = useState<string | null>(null);
   const [storedAnnotations, setStoredAnnotations] = useState<Annotations | undefined>(undefined);
+  const [selectedQuestion, setSelectedQuestion] = useState<string | null>(null);
+  const [focus, setFocus] = useState<string | null>(null);
 
   useEffect(() => {
     const h =
@@ -96,8 +99,11 @@ function Reading() {
       (typeof window !== "undefined" && sessionStorage.getItem("hasta:palmImage")) || undefined;
     const annotationsRaw =
       (typeof window !== "undefined" && sessionStorage.getItem("hasta:annotations")) || undefined;
+    const focusValue =
+      (typeof window !== "undefined" && sessionStorage.getItem("hasta:focus")) || "";
     let parsedAnnotations: Annotations | undefined;
     if (imageDataUrl) setPalmImage(imageDataUrl);
+    if (focusValue) setFocus(focusValue);
     if (annotationsRaw) {
       try {
         parsedAnnotations = JSON.parse(annotationsRaw) as Annotations;
@@ -111,6 +117,7 @@ function Reading() {
         hand: h,
         imageDataUrl: imageDataUrl || undefined,
         precomputedAnnotations: parsedAnnotations,
+        question: focusValue || undefined,
       },
     })
       .then((r) => !cancelled && setData(r as ReadingData))
@@ -126,25 +133,99 @@ function Reading() {
   return (
     <div className="min-h-screen flex flex-col">
       <SiteNav />
-      <main className="flex-1 max-w-4xl mx-auto w-full px-6 py-12 space-y-12">
-        <div className="text-center space-y-4">
-          <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-accent">
-            Your Destiny Reading
-          </span>
-          <h1 className="text-4xl md:text-6xl font-serif text-balance">
-            What your <span className="italic text-accent">{hand}</span> palm revealed
-          </h1>
-          <div className="flex items-center justify-center gap-3 text-xs font-mono uppercase tracking-widest text-foreground/40">
-            <span className="size-1.5 bg-accent rounded-full animate-pulse" />
-            Synthesized {new Date().toLocaleDateString()} · Hasta Samudrika Shastra
+      <main className="relative overflow-hidden flex-1 max-w-4xl mx-auto w-full px-6 py-12 space-y-12">
+        <OmParallax className="absolute -top-8 left-1/2 -translate-x-1/2 -z-10" speed={0.1} />
+        <div className="space-y-8 text-center">
+          <div className="space-y-4">
+            <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-accent">
+              Your Destiny Reading
+            </span>
+            <h1 className="text-4xl md:text-6xl font-serif text-balance">
+              What your <span className="italic text-accent">{hand}</span> palm revealed
+            </h1>
+            <p className="mx-auto max-w-2xl text-foreground/70 text-base md:text-lg leading-relaxed">
+              The Acharya has traced your life line, love line and destiny line, then translated the
+              visible palm evidence into a grounded, shastra-rooted guide for your next chapter.
+            </p>
           </div>
-          {data?.summary ? (
-            <div className="mx-auto max-w-2xl rounded-[28px] border border-accent/20 bg-card/70 p-6 shadow-gold-sm">
-              <p className="font-serif italic text-lg text-foreground/80">“{data.summary}”</p>
+
+          <div className="mx-auto flex flex-col gap-3 md:flex-row md:items-center md:justify-center md:gap-6">
+            <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card/80 px-4 py-2 text-xs uppercase tracking-[0.3em] text-foreground/60">
+              <span className="size-2 rounded-full bg-accent" /> {new Date().toLocaleDateString()}
             </div>
+            <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card/80 px-4 py-2 text-xs uppercase tracking-[0.3em] text-foreground/60">
+              <span className="size-2 rounded-full bg-accent/20" /> Palm evidence applied
+            </div>
+          </div>
+
+          {focus && (
+            <div className="mx-auto max-w-xl rounded-full border border-accent/30 bg-accent/5 px-5 py-2.5 text-sm text-foreground/75">
+              <span className="font-bold text-accent">Focused on:</span> {focus}
+            </div>
+          )}
+
+          {data?.summary ? (
+            <>
+              <div className="mx-auto max-w-2xl rounded-[32px] border border-accent/20 bg-card/75 p-8 shadow-gold-sm">
+                <p className="font-serif text-lg leading-relaxed text-foreground/85 italic">
+                  “{data.summary}”
+                </p>
+                <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+                  <Link
+                    to="/scan"
+                    className="bg-accent text-accent-foreground px-6 py-3 rounded-full text-sm font-bold hover:scale-105 transition-transform shadow-gold"
+                  >
+                    Rescan another palm
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" })
+                    }
+                    className="rounded-full border border-border bg-background/80 px-6 py-3 text-sm font-semibold text-foreground/80 hover:border-accent hover:text-accent transition-all"
+                  >
+                    Ask the Acharya
+                  </button>
+                </div>
+              </div>
+
+              <div className="mx-auto max-w-2xl rounded-[32px] border border-border bg-card/60 p-8 shadow-sm">
+                <div className="flex flex-col gap-4 text-center">
+                  <div>
+                    <div className="text-[11px] uppercase tracking-[0.3em] text-accent font-bold">
+                      What do you want to ask next?
+                    </div>
+                    <p className="text-foreground/70 mt-2 text-sm leading-relaxed">
+                      Choose one of these topics and the Acharya will answer it directly from your
+                      palm reading.
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {SUGGESTED.map((question) => (
+                      <button
+                        key={question}
+                        type="button"
+                        onClick={() => setSelectedQuestion(question)}
+                        className="rounded-3xl border border-border bg-accent/5 px-4 py-3 text-sm font-semibold text-foreground hover:bg-accent/10 hover:border-accent transition-all flex items-center justify-center gap-2"
+                      >
+                        <span className="text-[13px] text-accent">•</span>
+                        <span>{question}</span>
+                      </button>
+                    ))}
+                  </div>
+                  {selectedQuestion ? (
+                    <div className="text-[12px] text-foreground/60 italic">
+                      Preparing your question: “{selectedQuestion}”. Open the Acharya chat below to
+                      see the answer.
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            </>
           ) : (
             <div className="mx-auto max-w-2xl rounded-[28px] border border-border bg-card/60 p-6 text-sm text-foreground/60">
-              The reading is being composed now. Once the AI finishes its synthesis, your full destiny reading will appear here.
+              The reading is being composed now. Once the AI finishes its synthesis, your full
+              destiny reading will appear here.
             </div>
           )}
         </div>
@@ -238,7 +319,16 @@ function Reading() {
         </div>
       </main>
 
-      {data && <AcharyaChat hand={hand} imageDataUrl={palmImage} data={data} />}
+      {data && (
+        <AcharyaChat
+          hand={hand}
+          imageDataUrl={palmImage}
+          data={data}
+          focus={focus}
+          selectedQuestion={selectedQuestion ?? undefined}
+          onQuestionHandled={() => setSelectedQuestion(null)}
+        />
+      )}
       <SiteFooter />
     </div>
   );
@@ -321,9 +411,9 @@ function PalmCanvas({
         >
           <defs>
             <linearGradient id="scanGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="hsl(var(--accent))" stopOpacity="0" />
-              <stop offset="50%" stopColor="hsl(var(--accent))" stopOpacity="1" />
-              <stop offset="100%" stopColor="hsl(var(--accent))" stopOpacity="0" />
+              <stop offset="0%" stopColor="var(--accent)" stopOpacity="0" />
+              <stop offset="50%" stopColor="var(--accent)" stopOpacity="1" />
+              <stop offset="100%" stopColor="var(--accent)" stopOpacity="0" />
             </linearGradient>
             <mask id="palmMask">
               <rect x="0" y="0" width="1" height="1" fill="white" opacity="0.55" />
@@ -408,13 +498,13 @@ function PalmCanvas({
             const p = toImg(m.x, m.y);
             return (
               <g key={`m-${i}`} style={{ opacity: drawProgress }}>
-                <circle cx={p.x} cy={p.y} r={0.014} fill="hsl(var(--accent))" opacity={0.85} />
+                <circle cx={p.x} cy={p.y} r={0.014} fill="var(--accent)" opacity={0.85} />
                 <circle
                   cx={p.x}
                   cy={p.y}
                   r={0.024}
                   fill="none"
-                  stroke="hsl(var(--accent))"
+                  stroke="var(--accent)"
                   strokeWidth={0.003}
                   vectorEffect="non-scaling-stroke"
                   opacity={0.6}
@@ -451,7 +541,7 @@ function PalmCanvas({
 
         {annotations && !palmDetected && (
           <div className="absolute inset-0 flex items-end justify-center p-4 bg-gradient-to-t from-background/80 to-transparent">
-            <div className="text-center text-xs font-mono uppercase tracking-widest text-amber-400 bg-background/70 px-4 py-2 rounded-full border border-amber-400/30">
+            <div className="text-center text-xs font-mono uppercase tracking-widest text-amber-700 bg-card/90 px-4 py-2 rounded-full border border-amber-500/40">
               ⚠ Palm not clearly visible — try a closer, brighter photo
             </div>
           </div>
@@ -464,10 +554,10 @@ function PalmCanvas({
             className={
               "px-2.5 py-1 rounded-full border " +
               (quality === "excellent"
-                ? "border-green-500/40 text-green-400"
+                ? "border-green-600/40 text-green-700"
                 : quality === "good"
                   ? "border-accent/40 text-accent"
-                  : "border-amber-400/40 text-amber-400")
+                  : "border-amber-500/40 text-amber-700")
             }
           >
             Image: {quality ?? "—"}
@@ -491,34 +581,54 @@ function PalmCanvas({
 type Msg = { role: "user" | "acharya"; text: string };
 
 const SUGGESTED = [
-  "When will I marry?",
-  "Will I become wealthy?",
-  "What career suits me?",
-  "What is my hidden talent?",
-  "Is foreign travel in my destiny?",
+  "Love and relationships",
+  "Career and success",
+  "Money and wealth",
+  "Personal challenges",
+  "Health and balance",
+  "Other",
 ];
 
 function AcharyaChat({
   hand,
   imageDataUrl,
   data,
+  focus,
+  selectedQuestion,
+  onQuestionHandled,
 }: {
   hand: "left" | "right";
   imageDataUrl: string | null;
   data: ReadingData;
+  focus?: string | null;
+  selectedQuestion?: string;
+  onQuestionHandled?: () => void;
 }) {
   const ask = useServerFn(askAcharya);
   const [open, setOpen] = useState(false);
-  const [showInvite, setShowInvite] = useState(false);
-  const [msgs, setMsgs] = useState<Msg[]>([
+  const [msgs, setMsgs] = useState<Msg[]>(() => [
     {
       role: "acharya",
-      text: "Beta, the rekhas have spoken. Share your janm details below so I may weave your Mulank and Bhagyank with the parvats of your hand — then ask what weighs on your heart.",
+      text: focus
+        ? `Beta, the rekhas have spoken — including on what you asked: "${focus}". Share your janm details below so I may sharpen it with your Mulank and Bhagyank, then let us go deeper.`
+        : "Beta, the rekhas have spoken. Share your janm details below so I may weave your Mulank and Bhagyank with the parvats of your hand — then ask what weighs on your heart.",
     },
   ]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const onQuestionHandledRef = useRef(onQuestionHandled);
+
+  useEffect(() => {
+    onQuestionHandledRef.current = onQuestionHandled;
+  }, [onQuestionHandled]);
+
+  // The Acharya greets the seeker on their own, shortly after the reading
+  // finishes composing, instead of waiting for a manual tap on the launcher.
+  useEffect(() => {
+    const t = setTimeout(() => setOpen(true), 1200);
+    return () => clearTimeout(t);
+  }, []);
 
   // Birth details (persisted across session)
   const [name, setName] = useState("");
@@ -549,15 +659,6 @@ function AcharyaChat({
     }
   }, []);
 
-  useEffect(() => {
-    const t = setTimeout(() => setShowInvite(true), 1500);
-    return () => clearTimeout(t);
-  }, []);
-
-  useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-  }, [msgs, open]);
-
   const context = useMemo(() => {
     const parts = [
       `Summary: ${data.summary}`,
@@ -581,6 +682,70 @@ function AcharyaChat({
     return notes.filter(Boolean).join("\n");
   }, [data]);
 
+  const send = useCallback(
+    async (q: string) => {
+      const question = q.trim();
+      if (!question || busy) return;
+      setMsgs((m) => [...m, { role: "user", text: question }]);
+      setInput("");
+      setBusy(true);
+      try {
+        const r = await ask({
+          data: {
+            hand,
+            question,
+            imageDataUrl: imageDataUrl ?? undefined,
+            context,
+            annotationContext,
+            name: name || undefined,
+            dob: dob || undefined,
+            tob: tob || undefined,
+            pob: pob || undefined,
+            gender: gender || undefined,
+            language,
+          },
+        });
+        setMsgs((m) => [...m, { role: "acharya", text: r.answer }]);
+      } catch {
+        setMsgs((m) => [
+          ...m,
+          {
+            role: "acharya",
+            text: "The Acharya is still reflecting. Please try again.",
+          },
+        ]);
+      } finally {
+        setBusy(false);
+      }
+    },
+    [
+      ask,
+      annotationContext,
+      context,
+      dob,
+      gender,
+      hand,
+      imageDataUrl,
+      language,
+      name,
+      pob,
+      tob,
+      busy,
+    ],
+  );
+
+  useEffect(() => {
+    if (!selectedQuestion) return;
+    setOpen(true);
+    send(selectedQuestion).finally(() => onQuestionHandledRef.current?.());
+  }, [selectedQuestion, send]);
+
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
+  }, [msgs, open]);
+
+  const isFallbackResponse = (text: string) => /fallback|preview mode|local preview/i.test(text);
+
   const saveBirth = () => {
     try {
       localStorage.setItem("hasta:birth", JSON.stringify({ name, dob, tob, pob, gender }));
@@ -590,76 +755,28 @@ function AcharyaChat({
     setDetailsOpen(false);
   };
 
-  const send = async (q: string) => {
-    const question = q.trim();
-    if (!question || busy) return;
-    setMsgs((m) => [...m, { role: "user", text: question }]);
-    setInput("");
-    setBusy(true);
-    try {
-      const r = await ask({
-        data: {
-          hand,
-          question,
-          imageDataUrl: imageDataUrl ?? undefined,
-          context,
-          annotationContext,
-          name: name || undefined,
-          dob: dob || undefined,
-          tob: tob || undefined,
-          pob: pob || undefined,
-          gender: gender || undefined,
-          language,
-        },
-      });
-      setMsgs((m) => [...m, { role: "acharya", text: r.answer }]);
-    } catch (e) {
-      setMsgs((m) => [
-        ...m,
-        {
-          role: "acharya",
-          text: e instanceof Error ? e.message : "The shastra is silent at this moment.",
-        },
-      ]);
-    } finally {
-      setBusy(false);
-    }
-  };
-
   return (
     <>
       {/* Floating launcher */}
       <button
         onClick={() => {
           setOpen(true);
-          setShowInvite(false);
         }}
         className="fixed bottom-6 right-6 z-40 flex items-center gap-3 bg-accent text-accent-foreground pl-4 pr-5 py-3 rounded-full shadow-gold hover:scale-105 transition-all"
       >
-        <span className="size-9 rounded-full bg-background/20 flex items-center justify-center text-lg">
-          🪔
+        <span className="size-9 rounded-full bg-background/20 flex items-center justify-center text-lg leading-none">
+          ॐ
         </span>
         <span className="font-bold text-sm">Ask the Acharya</span>
       </button>
-
-      {showInvite && !open && (
-        <div className="fixed bottom-24 right-6 z-40 max-w-xs bg-card border border-accent/40 rounded-2xl p-4 shadow-gold animate-[float_6s_ease-in-out_infinite]">
-          <p className="text-sm font-serif italic text-foreground/85">
-            "Your reading is only the beginning. Ask me anything — marriage, wealth, dharma."
-          </p>
-          <div className="text-[10px] uppercase tracking-widest font-bold text-accent mt-2">
-            — Acharya AI
-          </div>
-        </div>
-      )}
 
       {open && (
         <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-background/70 backdrop-blur-sm p-0 md:p-6">
           <div className="w-full max-w-lg h-[80vh] md:h-[640px] bg-card border border-accent/30 rounded-t-3xl md:rounded-3xl shadow-gold flex flex-col overflow-hidden">
             <header className="flex items-center justify-between px-5 py-4 border-b border-border bg-gradient-to-r from-accent/10 to-transparent">
               <div className="flex items-center gap-3">
-                <div className="size-10 rounded-full bg-accent flex items-center justify-center text-xl">
-                  🪔
+                <div className="size-10 rounded-full bg-gradient-divine flex items-center justify-center text-xl text-white leading-none shadow-divine-sm">
+                  ॐ
                 </div>
                 <div>
                   <div className="font-serif text-lg">Acharya AI</div>
@@ -709,7 +826,7 @@ function AcharyaChat({
                 onClick={() => setDetailsOpen((o) => !o)}
                 className="w-full px-5 py-2.5 flex items-center justify-between text-[11px] uppercase tracking-widest font-bold text-accent hover:bg-accent/5"
               >
-                <span>🕉 Janm Details {hasDetails ? "· Saved" : "· Optional but sharper"}</span>
+                <span>ॐ Janm Details {hasDetails ? "· Saved" : "· Optional but sharper"}</span>
                 <span>{detailsOpen ? "−" : "+"}</span>
               </button>
               {detailsOpen && (

@@ -1,0 +1,9 @@
+English summary (draft):
+
+This file summarizes the Hanumat Jyotisham prashna (question) treatise present in the original Telugu source. It outlines the 40 prashna categories used for timing and yes/no decisions, and how to map seeker questions to prashna categories to sharpen timing and direction. Use as a developer-facing summary; replace with verified translation when available.
+
+Canonical terms included here for developer reference:
+- vivaha-prashna
+- santana-prashna
+- dhana-agama
+- gamana / aagamana

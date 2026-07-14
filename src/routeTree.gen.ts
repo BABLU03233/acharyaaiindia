@@ -9,11 +9,24 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SuccessRouteImport } from './routes/success'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ScanRouteImport } from './routes/scan'
 import { Route as ReadingRouteImport } from './routes/reading'
+import { Route as CheckoutRouteImport } from './routes/checkout'
+import { Route as CancelRouteImport } from './routes/cancel'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiVerifyPaymentRouteImport } from './routes/api.verify-payment'
+import { Route as ApiStripeWebhookRouteImport } from './routes/api.stripe-webhook'
+import { Route as ApiHealthRouteImport } from './routes/api.health'
+import { Route as ApiCheckoutRouteImport } from './routes/api.checkout'
 
+const SuccessRoute = SuccessRouteImport.update({
+  id: '/success',
+  path: '/success',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
@@ -29,48 +42,159 @@ const ReadingRoute = ReadingRouteImport.update({
   path: '/reading',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CheckoutRoute = CheckoutRouteImport.update({
+  id: '/checkout',
+  path: '/checkout',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CancelRoute = CancelRouteImport.update({
+  id: '/cancel',
+  path: '/cancel',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiVerifyPaymentRoute = ApiVerifyPaymentRouteImport.update({
+  id: '/api/verify-payment',
+  path: '/api/verify-payment',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiStripeWebhookRoute = ApiStripeWebhookRouteImport.update({
+  id: '/api/stripe-webhook',
+  path: '/api/stripe-webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiHealthRoute = ApiHealthRouteImport.update({
+  id: '/api/health',
+  path: '/api/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCheckoutRoute = ApiCheckoutRouteImport.update({
+  id: '/api/checkout',
+  path: '/api/checkout',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
+  '/cancel': typeof CancelRoute
+  '/checkout': typeof CheckoutRoute
   '/reading': typeof ReadingRoute
   '/scan': typeof ScanRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/success': typeof SuccessRoute
+  '/api/checkout': typeof ApiCheckoutRoute
+  '/api/health': typeof ApiHealthRoute
+  '/api/stripe-webhook': typeof ApiStripeWebhookRoute
+  '/api/verify-payment': typeof ApiVerifyPaymentRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
+  '/cancel': typeof CancelRoute
+  '/checkout': typeof CheckoutRoute
   '/reading': typeof ReadingRoute
   '/scan': typeof ScanRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/success': typeof SuccessRoute
+  '/api/checkout': typeof ApiCheckoutRoute
+  '/api/health': typeof ApiHealthRoute
+  '/api/stripe-webhook': typeof ApiStripeWebhookRoute
+  '/api/verify-payment': typeof ApiVerifyPaymentRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
+  '/cancel': typeof CancelRoute
+  '/checkout': typeof CheckoutRoute
   '/reading': typeof ReadingRoute
   '/scan': typeof ScanRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/success': typeof SuccessRoute
+  '/api/checkout': typeof ApiCheckoutRoute
+  '/api/health': typeof ApiHealthRoute
+  '/api/stripe-webhook': typeof ApiStripeWebhookRoute
+  '/api/verify-payment': typeof ApiVerifyPaymentRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/reading' | '/scan' | '/sitemap.xml'
+  fullPaths:
+    | '/'
+    | '/admin'
+    | '/cancel'
+    | '/checkout'
+    | '/reading'
+    | '/scan'
+    | '/sitemap.xml'
+    | '/success'
+    | '/api/checkout'
+    | '/api/health'
+    | '/api/stripe-webhook'
+    | '/api/verify-payment'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/reading' | '/scan' | '/sitemap.xml'
-  id: '__root__' | '/' | '/reading' | '/scan' | '/sitemap.xml'
+  to:
+    | '/'
+    | '/admin'
+    | '/cancel'
+    | '/checkout'
+    | '/reading'
+    | '/scan'
+    | '/sitemap.xml'
+    | '/success'
+    | '/api/checkout'
+    | '/api/health'
+    | '/api/stripe-webhook'
+    | '/api/verify-payment'
+  id:
+    | '__root__'
+    | '/'
+    | '/admin'
+    | '/cancel'
+    | '/checkout'
+    | '/reading'
+    | '/scan'
+    | '/sitemap.xml'
+    | '/success'
+    | '/api/checkout'
+    | '/api/health'
+    | '/api/stripe-webhook'
+    | '/api/verify-payment'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRoute
+  CancelRoute: typeof CancelRoute
+  CheckoutRoute: typeof CheckoutRoute
   ReadingRoute: typeof ReadingRoute
   ScanRoute: typeof ScanRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  SuccessRoute: typeof SuccessRoute
+  ApiCheckoutRoute: typeof ApiCheckoutRoute
+  ApiHealthRoute: typeof ApiHealthRoute
+  ApiStripeWebhookRoute: typeof ApiStripeWebhookRoute
+  ApiVerifyPaymentRoute: typeof ApiVerifyPaymentRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/success': {
+      id: '/success'
+      path: '/success'
+      fullPath: '/success'
+      preLoaderRoute: typeof SuccessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sitemap.xml': {
       id: '/sitemap.xml'
       path: '/sitemap.xml'
@@ -92,6 +216,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReadingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/checkout': {
+      id: '/checkout'
+      path: '/checkout'
+      fullPath: '/checkout'
+      preLoaderRoute: typeof CheckoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cancel': {
+      id: '/cancel'
+      path: '/cancel'
+      fullPath: '/cancel'
+      preLoaderRoute: typeof CancelRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -99,14 +244,50 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/verify-payment': {
+      id: '/api/verify-payment'
+      path: '/api/verify-payment'
+      fullPath: '/api/verify-payment'
+      preLoaderRoute: typeof ApiVerifyPaymentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/stripe-webhook': {
+      id: '/api/stripe-webhook'
+      path: '/api/stripe-webhook'
+      fullPath: '/api/stripe-webhook'
+      preLoaderRoute: typeof ApiStripeWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/health': {
+      id: '/api/health'
+      path: '/api/health'
+      fullPath: '/api/health'
+      preLoaderRoute: typeof ApiHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/checkout': {
+      id: '/api/checkout'
+      path: '/api/checkout'
+      fullPath: '/api/checkout'
+      preLoaderRoute: typeof ApiCheckoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRoute,
+  CancelRoute: CancelRoute,
+  CheckoutRoute: CheckoutRoute,
   ReadingRoute: ReadingRoute,
   ScanRoute: ScanRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  SuccessRoute: SuccessRoute,
+  ApiCheckoutRoute: ApiCheckoutRoute,
+  ApiHealthRoute: ApiHealthRoute,
+  ApiStripeWebhookRoute: ApiStripeWebhookRoute,
+  ApiVerifyPaymentRoute: ApiVerifyPaymentRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -118,6 +118,7 @@ const FormControl = React.forwardRef<
 });
 FormControl.displayName = "FormControl";
 
+/* eslint-disable react-refresh/only-export-components */
 const FormDescription = React.forwardRef<
   HTMLParagraphElement,
   React.HTMLAttributes<HTMLParagraphElement>
