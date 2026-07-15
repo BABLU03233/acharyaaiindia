@@ -19,6 +19,9 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiVerifyPaymentRouteImport } from './routes/api.verify-payment'
 import { Route as ApiStripeWebhookRouteImport } from './routes/api.stripe-webhook'
+import { Route as ApiRazorpayWebhookRouteImport } from './routes/api.razorpay-webhook'
+import { Route as ApiRazorpayVerifyRouteImport } from './routes/api.razorpay-verify'
+import { Route as ApiRazorpayOrderRouteImport } from './routes/api.razorpay-order'
 import { Route as ApiHealthRouteImport } from './routes/api.health'
 import { Route as ApiCheckoutRouteImport } from './routes/api.checkout'
 
@@ -72,6 +75,21 @@ const ApiStripeWebhookRoute = ApiStripeWebhookRouteImport.update({
   path: '/api/stripe-webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiRazorpayWebhookRoute = ApiRazorpayWebhookRouteImport.update({
+  id: '/api/razorpay-webhook',
+  path: '/api/razorpay-webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiRazorpayVerifyRoute = ApiRazorpayVerifyRouteImport.update({
+  id: '/api/razorpay-verify',
+  path: '/api/razorpay-verify',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiRazorpayOrderRoute = ApiRazorpayOrderRouteImport.update({
+  id: '/api/razorpay-order',
+  path: '/api/razorpay-order',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiHealthRoute = ApiHealthRouteImport.update({
   id: '/api/health',
   path: '/api/health',
@@ -94,6 +112,9 @@ export interface FileRoutesByFullPath {
   '/success': typeof SuccessRoute
   '/api/checkout': typeof ApiCheckoutRoute
   '/api/health': typeof ApiHealthRoute
+  '/api/razorpay-order': typeof ApiRazorpayOrderRoute
+  '/api/razorpay-verify': typeof ApiRazorpayVerifyRoute
+  '/api/razorpay-webhook': typeof ApiRazorpayWebhookRoute
   '/api/stripe-webhook': typeof ApiStripeWebhookRoute
   '/api/verify-payment': typeof ApiVerifyPaymentRoute
 }
@@ -108,6 +129,9 @@ export interface FileRoutesByTo {
   '/success': typeof SuccessRoute
   '/api/checkout': typeof ApiCheckoutRoute
   '/api/health': typeof ApiHealthRoute
+  '/api/razorpay-order': typeof ApiRazorpayOrderRoute
+  '/api/razorpay-verify': typeof ApiRazorpayVerifyRoute
+  '/api/razorpay-webhook': typeof ApiRazorpayWebhookRoute
   '/api/stripe-webhook': typeof ApiStripeWebhookRoute
   '/api/verify-payment': typeof ApiVerifyPaymentRoute
 }
@@ -123,6 +147,9 @@ export interface FileRoutesById {
   '/success': typeof SuccessRoute
   '/api/checkout': typeof ApiCheckoutRoute
   '/api/health': typeof ApiHealthRoute
+  '/api/razorpay-order': typeof ApiRazorpayOrderRoute
+  '/api/razorpay-verify': typeof ApiRazorpayVerifyRoute
+  '/api/razorpay-webhook': typeof ApiRazorpayWebhookRoute
   '/api/stripe-webhook': typeof ApiStripeWebhookRoute
   '/api/verify-payment': typeof ApiVerifyPaymentRoute
 }
@@ -139,6 +166,9 @@ export interface FileRouteTypes {
     | '/success'
     | '/api/checkout'
     | '/api/health'
+    | '/api/razorpay-order'
+    | '/api/razorpay-verify'
+    | '/api/razorpay-webhook'
     | '/api/stripe-webhook'
     | '/api/verify-payment'
   fileRoutesByTo: FileRoutesByTo
@@ -153,6 +183,9 @@ export interface FileRouteTypes {
     | '/success'
     | '/api/checkout'
     | '/api/health'
+    | '/api/razorpay-order'
+    | '/api/razorpay-verify'
+    | '/api/razorpay-webhook'
     | '/api/stripe-webhook'
     | '/api/verify-payment'
   id:
@@ -167,6 +200,9 @@ export interface FileRouteTypes {
     | '/success'
     | '/api/checkout'
     | '/api/health'
+    | '/api/razorpay-order'
+    | '/api/razorpay-verify'
+    | '/api/razorpay-webhook'
     | '/api/stripe-webhook'
     | '/api/verify-payment'
   fileRoutesById: FileRoutesById
@@ -182,6 +218,9 @@ export interface RootRouteChildren {
   SuccessRoute: typeof SuccessRoute
   ApiCheckoutRoute: typeof ApiCheckoutRoute
   ApiHealthRoute: typeof ApiHealthRoute
+  ApiRazorpayOrderRoute: typeof ApiRazorpayOrderRoute
+  ApiRazorpayVerifyRoute: typeof ApiRazorpayVerifyRoute
+  ApiRazorpayWebhookRoute: typeof ApiRazorpayWebhookRoute
   ApiStripeWebhookRoute: typeof ApiStripeWebhookRoute
   ApiVerifyPaymentRoute: typeof ApiVerifyPaymentRoute
 }
@@ -258,6 +297,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiStripeWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/razorpay-webhook': {
+      id: '/api/razorpay-webhook'
+      path: '/api/razorpay-webhook'
+      fullPath: '/api/razorpay-webhook'
+      preLoaderRoute: typeof ApiRazorpayWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/razorpay-verify': {
+      id: '/api/razorpay-verify'
+      path: '/api/razorpay-verify'
+      fullPath: '/api/razorpay-verify'
+      preLoaderRoute: typeof ApiRazorpayVerifyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/razorpay-order': {
+      id: '/api/razorpay-order'
+      path: '/api/razorpay-order'
+      fullPath: '/api/razorpay-order'
+      preLoaderRoute: typeof ApiRazorpayOrderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/health': {
       id: '/api/health'
       path: '/api/health'
@@ -286,6 +346,9 @@ const rootRouteChildren: RootRouteChildren = {
   SuccessRoute: SuccessRoute,
   ApiCheckoutRoute: ApiCheckoutRoute,
   ApiHealthRoute: ApiHealthRoute,
+  ApiRazorpayOrderRoute: ApiRazorpayOrderRoute,
+  ApiRazorpayVerifyRoute: ApiRazorpayVerifyRoute,
+  ApiRazorpayWebhookRoute: ApiRazorpayWebhookRoute,
   ApiStripeWebhookRoute: ApiStripeWebhookRoute,
   ApiVerifyPaymentRoute: ApiVerifyPaymentRoute,
 }

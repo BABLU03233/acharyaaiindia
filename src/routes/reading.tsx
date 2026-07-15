@@ -374,7 +374,7 @@ function Reading() {
                   Unlock full reading →
                 </button>
                 <p className="text-[11px] text-foreground/50 uppercase tracking-widest font-mono">
-                  Starts at ₹49 · Secured by Stripe
+                  Starts at ₹49 · Razorpay test mode · UPI, cards, netbanking
                 </p>
               </div>
             )}
@@ -767,7 +767,7 @@ function PaywallModal({ onClose }: { onClose: () => void }) {
           ))}
         </div>
         <div className="px-6 pb-6 text-center text-[11px] text-foreground/50 uppercase tracking-widest font-mono">
-          Secure payments · Cancel anytime · 30-day money-back guarantee
+          Razorpay test mode · Cancel anytime · 30-day money-back guarantee
         </div>
       </div>
     </div>

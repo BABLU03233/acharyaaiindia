@@ -119,6 +119,69 @@
       stroke-dashoffset: 0;
     }
   }
+  @keyframes palm-line-draw {
+    0% {
+      stroke-dasharray: 0 200;
+      opacity: 0;
+    }
+    12% {
+      opacity: 1;
+    }
+    100% {
+      stroke-dasharray: 200 0;
+      opacity: 1;
+    }
+  }
+  @keyframes palm-dot-pop {
+    0% {
+      transform: scale(0);
+      opacity: 0;
+    }
+    60% {
+      transform: scale(1.4);
+    }
+    100% {
+      transform: scale(1);
+      opacity: 0.9;
+    }
+  }
+  @keyframes palm-scan-sweep {
+    0% {
+      transform: translateY(-30%);
+      opacity: 0;
+    }
+    10% {
+      opacity: 1;
+    }
+    90% {
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(140%);
+      opacity: 0;
+    }
+  }
+}
+
+.palm-line {
+  stroke-dasharray: 0 200;
+  animation: palm-line-draw 2s var(--ease-cinematic) forwards;
+  filter: drop-shadow(0 0 3px currentColor);
+}
+.palm-line-1 { animation-delay: 200ms; }
+.palm-line-2 { animation-delay: 800ms; }
+.palm-line-3 { animation-delay: 1400ms; }
+.palm-line-4 { animation-delay: 2000ms; }
+.palm-dot {
+  transform-origin: center;
+  transform: scale(0);
+  opacity: 0;
+  animation: palm-dot-pop 900ms var(--ease-cinematic) forwards;
+  filter: drop-shadow(0 0 4px currentColor);
+}
+.palm-scan-sweep {
+  animation: palm-scan-sweep 4s cubic-bezier(0.22, 0.9, 0.51, 1) infinite;
+  animation-delay: 800ms;
 }
 
 :root {

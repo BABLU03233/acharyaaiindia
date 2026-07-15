@@ -1,0 +1,52 @@
+{
+  "summary": "First-pass full E2E for Acharya AI (TanStack Start + FastAPI). Ran 19 pytest cases (all pass) plus Playwright walkthrough of homepage, admin login/logout, checkout, success (bad-signature), scan, reading. Every core surface works and returns 200. All required data-testids present. Razorpay backend order API creates real order_ ids and returns key_id=rzp_test_TDhSd7QRTTx6tx. Bad-signature /api/razorpay-verify returns failed state and UI shows data-testid=success-failed. Only one shipping blocker discovered: the site's Content-Security-Policy header does NOT allow https://checkout.razorpay.com/v1/checkout.js (script-src is 'self' 'unsafe-inline'), so the Razorpay Checkout modal will never actually open in the browser even though the backend order creation is fine.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {
+        "flow": "Razorpay checkout modal launch on /checkout",
+        "issue": "CSP header blocks https://checkout.razorpay.com/v1/checkout.js (script-src 'self' 'unsafe-inline'). window.Razorpay never loads, so clicking checkout-pay-button will not open the Razorpay modal in the real browser (backend order creation still succeeds). Also blocks https://static.cloudflareinsights.com/beacon.min.js. Need to add checkout.razorpay.com (and api.razorpay.com for connect-src, plus lumberjack.razorpay.com) to CSP.",
+        "affected_selectors": ["[data-testid='checkout-pay-button']"]
+      }
+    ],
+    "design_issues": [
+      {
+        "screen": "All pages (dev-mode noise)",
+        "issues": [
+          "Many React hydration-mismatch warnings caused by the vite-tsd-source plugin injecting data-tsd-source attributes on SSR vs client render. Non-fatal, but pollutes console and will confuse debugging in production. Consider disabling the source-map plugin outside dev, or making it deterministic."
+        ]
+      }
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/backend_test.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [
+    "Update the CSP served by /app/backend/server.py (and/or __root.tsx meta) to include https://checkout.razorpay.com and https://api.razorpay.com in script-src / connect-src, plus https://static.cloudflareinsights.com if Cloudflare beacon is desired. Without this, the Razorpay modal will not open for real users.",
+    "Investigate hydration mismatch warnings — most stem from the data-tsd-source dev plugin generating slightly different column numbers between SSR and client. Gate the plugin to dev-only or remove for production build."
+  ],
+  "critical_code_review_comments": [
+    "CSP is defined but too strict — every third-party script (Razorpay, Cloudflare beacon) is blocked. In production this will silently break Razorpay checkout even though the API is healthy.",
+    "Hydration mismatch across multiple routes indicates the vite source-tag plugin is enabled in the production SSR bundle. Should be dev-only.",
+    "Admin JWT stored in localStorage (documented) — acceptable for admin console but flag for future hardening (httpOnly cookie preferred).",
+    "The Cloudflare beacon 404 on the preview URL is noise; safe to ignore or gate to a CF-only environment."
+  ],
+  "updated_files": [
+    "/app/backend/tests/backend_test.py"
+  ],
+  "success_rate": {
+    "backend": "100% (19/19 pytest)",
+    "frontend": "95% (all testids present and all pages render; Razorpay modal launch blocked by CSP — order API itself works)"
+  },
+  "test_credentials": "admin / Admin@12345 (from /app/memory/test_credentials.md). Razorpay TEST key rzp_test_TDhSd7QRTTx6tx verified live.",
+  "seed_data_creation": "Two Razorpay TEST orders created via API during tests (order_ ids returned by Razorpay; visible in /api/admin/orders).",
+  "retest_needed": true,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Backend regression is /app/backend/tests/backend_test.py (pytest, 19 tests covering health, routing, admin JWT, Razorpay order + verify, and cross-check of created order in admin list). Everything green. Only outstanding item for next iteration is verifying the CSP fix — after main agent updates CSP to allow checkout.razorpay.com, re-run the checkout Playwright flow and confirm window.Razorpay is defined and the modal opens (no need to complete a real payment).",
+  "rca_of_the_issue": "The CSP header served by the FastAPI reverse-proxy (backend/server.py) or set as a <meta http-equiv> in __root.tsx uses script-src 'self' 'unsafe-inline' only. Razorpay's checkout.js is hosted on checkout.razorpay.com and is therefore blocked by the browser. This does NOT affect the /api/razorpay-order backend call (which is server-to-server via Razorpay SDK, not subject to CSP), so the API tests pass and the order is created — but the client-side new window.Razorpay(...) never gets a chance to run. Fix: extend CSP to include https://checkout.razorpay.com https://api.razorpay.com https://lumberjack.razorpay.com in script-src / connect-src / frame-src as appropriate."
+}

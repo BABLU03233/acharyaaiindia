@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import { checkRateLimit, RATE_LIMITS, type RateLimitConfig } from "./security";
+import { logEvent } from "./event-log";
 import shastraText from "./knowledge/hasta-samudrika-shastra.txt?raw";
 import shastraTextClean from "./knowledge/hasta-samudrika-shastra.clean.txt?raw";
 import shastraTextEn from "./knowledge/hasta-samudrika-shastra.en.txt?raw";
@@ -679,18 +680,20 @@ function buildFallbackChatAnswer(
 async function callClaude(
   messages: unknown[],
   json: boolean,
-  model = "claude-3-5-sonnet-20241022",
-  timeoutMs = 20000,
+  model = "claude-sonnet-4-5-20250929",
+  timeoutMs = 25000,
 ) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) throw new Error("LOCAL_FALLBACK: ANTHROPIC_API_KEY not configured");
+  const baseUrl = (process.env.ANTHROPIC_BASE_URL || "https://api.anthropic.com").replace(/\/$/, "");
+  const endpoint = `${baseUrl}/v1/messages`;
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
 
   let res: Response;
   try {
-    res = await fetch("https://api.anthropic.com/v1/messages", {
+    res = await fetch(endpoint, {
       method: "POST",
       signal: controller.signal,
       headers: {
@@ -700,7 +703,7 @@ async function callClaude(
       },
       body: JSON.stringify({
         model,
-        max_tokens: json ? 1200 : 2048,
+        max_tokens: json ? 1500 : 900,
         messages,
       }),
     });
@@ -728,7 +731,7 @@ async function callClaude(
 
 async function extractPalmAnnotations(
   imageDataUrl: string,
-  model = "claude-3-5-sonnet-20241022",
+  model = "claude-sonnet-4-5-20250929",
 ): Promise<Annotations> {
   try {
     // Convert data URL to base64 if needed
@@ -803,7 +806,7 @@ export const generateReading = createServerFn({ method: "POST" })
       ? normalizeAnnotations(
           data.precomputedAnnotations?.palmDetected
             ? data.precomputedAnnotations
-            : await extractPalmAnnotations(data.imageDataUrl!, "claude-3-5-sonnet-20241022"),
+            : await extractPalmAnnotations(data.imageDataUrl!, "claude-sonnet-4-5-20250929"),
         )
       : { ...EMPTY_ANNOTATIONS, notes: "No palm image provided." };
 
@@ -864,7 +867,7 @@ Rules:
           { role: "user", content: userContent },
         ],
         true,
-        "claude-3-5-sonnet-20241022",
+        "claude-sonnet-4-5-20250929",
       );
     } catch (error) {
       if (isFallbackModeError(error)) {
@@ -875,7 +878,7 @@ Rules:
 
     const content = json.choices?.[0]?.message?.content ?? "{}";
     const parsed = JSON.parse(content) as Omit<ReadingResult, "annotations">;
-    return {
+    const result: ReadingResult = {
       scores: parsed.scores ?? { destiny: 0, wealth: 0, love: 0, karma: 0 },
       free: Array.isArray(parsed.free)
         ? parsed.free.slice(0, 2)
@@ -886,6 +889,19 @@ Rules:
       summary: safeText(parsed.summary, "The rekhas speak softly but truly."),
       annotations,
     };
+
+    // Log the reading to the admin store (fire-and-forget).
+    void logEvent("reading", {
+      hand: data.hand,
+      question: data.question || null,
+      quality: annotations.imageQuality,
+      palm_detected: annotations.palmDetected,
+      lines_detected: annotations.lines.length,
+      summary: result.summary,
+      scores: result.scores,
+    });
+
+    return result;
   });
 
 export const askAcharya = createServerFn({ method: "POST" })
@@ -942,7 +958,7 @@ Reply in 2–4 short, natural, human sentences — warm spoken tone, no lists, n
           { role: "user", content: userContent },
         ],
         false,
-        "claude-3-5-sonnet-20241022",
+        "claude-sonnet-4-5-20250929",
       );
 
       const answer = sanitizeAnswer(

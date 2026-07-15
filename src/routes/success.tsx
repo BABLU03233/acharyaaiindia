@@ -1,5 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { CheckCircle2, XCircle, Loader2 } from "lucide-react";
+import { SiteNav } from "@/components/site/Nav";
 
 export const Route = createFileRoute("/success")({
   head: () => ({
@@ -11,134 +13,188 @@ export const Route = createFileRoute("/success")({
   component: SuccessPage,
 });
 
-type VerifyStatus = "complete" | "pending" | "failed";
+type VerifyStatus = "complete" | "failed" | "pending";
 
 function SuccessPage() {
-  const [sessionId, setSessionId] = useState<string | null>(null);
-  const [verifying, setVerifying] = useState(true);
   const [status, setStatus] = useState<VerifyStatus | "unknown">("unknown");
+  const [verifying, setVerifying] = useState(true);
+  const [message, setMessage] = useState<string | null>(null);
+  const [plan, setPlan] = useState<string | null>(null);
+  const [paymentId, setPaymentId] = useState<string | null>(null);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
-    const id = params.get("session_id");
-    setSessionId(id);
+    const razorpayPaymentId = params.get("payment_id");
+    const razorpayOrderId = params.get("order_id");
+    const razorpaySignature = params.get("signature");
+    const planParam = params.get("plan");
 
-    if (id) {
-      verifyPayment(id);
-    } else {
-      setVerifying(false);
-      setStatus("unknown");
-    }
-  }, []);
+    setPaymentId(razorpayPaymentId);
+    setPlan(planParam);
 
-  const verifyPayment = async (id: string) => {
-    try {
-      const response = await fetch(`/api/verify-payment?session_id=${id}`, {
-        method: "GET",
-      });
+    // Stripe legacy support — /success?session_id=cs_test_... would come from
+    // the old Stripe checkout URL that some existing SEO links use.
+    const stripeSessionId = params.get("session_id");
 
-      if (response.ok) {
-        const data = (await response.json()) as { status: VerifyStatus };
-        setStatus(data.status);
-        if (data.status === "complete") {
-          try {
-            localStorage.setItem("hasta:unlocked", "true");
-          } catch {
-            /* ignore */
+    const verify = async () => {
+      try {
+        if (razorpayPaymentId && razorpayOrderId && razorpaySignature) {
+          const email = localStorage.getItem("hasta:checkout-email") || "";
+          const res = await fetch("/api/razorpay-verify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              razorpay_payment_id: razorpayPaymentId,
+              razorpay_order_id: razorpayOrderId,
+              razorpay_signature: razorpaySignature,
+              plan: planParam,
+              email,
+            }),
+          });
+          const data = (await res.json()) as {
+            status: VerifyStatus;
+            error?: string;
+          };
+          setStatus(data.status);
+          if (data.status === "complete") {
+            try {
+              localStorage.setItem("hasta:unlocked", "true");
+              if (planParam) localStorage.setItem("hasta:plan", planParam);
+            } catch {
+              /* ignore */
+            }
+          } else if (data.error) {
+            setMessage(data.error);
           }
+        } else if (stripeSessionId) {
+          const res = await fetch(`/api/verify-payment?session_id=${stripeSessionId}`);
+          if (res.ok) {
+            const data = (await res.json()) as { status: VerifyStatus };
+            setStatus(data.status);
+            if (data.status === "complete") {
+              try {
+                localStorage.setItem("hasta:unlocked", "true");
+              } catch {
+                /* ignore */
+              }
+            }
+          } else {
+            setStatus("unknown");
+          }
+        } else {
+          setStatus("unknown");
         }
-      } else {
+      } catch (err) {
         setStatus("unknown");
+        setMessage(err instanceof Error ? err.message : "Verification error");
+      } finally {
+        setVerifying(false);
       }
-    } catch (error) {
-      console.error("Verification error:", error);
-      setStatus("unknown");
-    } finally {
-      setVerifying(false);
-    }
-  };
+    };
+    void verify();
+  }, []);
 
   const confirmed = status === "complete";
   const failed = status === "failed";
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-4 py-12">
-      <div className="max-w-md w-full text-center space-y-8">
-        {verifying ? (
-          <div className="space-y-4">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-accent" />
-            <p className="text-foreground/60">Verifying your payment...</p>
-          </div>
-        ) : confirmed ? (
-          <>
-            <div className="space-y-4">
-              <div className="text-6xl mb-4">✓</div>
-              <h1 className="text-4xl font-serif mb-2">Payment Successful!</h1>
-              <p className="text-foreground/70">
-                Thank you for your purchase. Your premium features are now active.
+    <div className="min-h-screen flex flex-col bg-background">
+      <SiteNav />
+      <main className="flex-1 flex items-center justify-center px-4 py-12">
+        <div className="max-w-md w-full text-center space-y-8">
+          {verifying ? (
+            <div data-testid="success-verifying" className="space-y-4">
+              <Loader2 className="mx-auto size-10 animate-spin text-accent" />
+              <p className="text-foreground/60 text-sm uppercase tracking-widest font-mono">
+                Verifying your payment…
               </p>
             </div>
-            <div className="space-y-4 bg-accent/10 border border-accent/20 rounded-lg p-6">
-              <div className="text-left space-y-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-accent">✓</span>
-                  <span>Premium features unlocked</span>
+          ) : confirmed ? (
+            <>
+              <div
+                data-testid="success-confirmed"
+                className="mx-auto size-20 rounded-full bg-accent/10 border-2 border-accent flex items-center justify-center shadow-gold"
+              >
+                <CheckCircle2 className="size-10 text-accent" strokeWidth={2} />
+              </div>
+              <div className="space-y-2">
+                <h1 className="text-3xl md:text-4xl font-serif">Your reading is unlocked</h1>
+                <p className="text-foreground/70">
+                  Thank you, seeker. The Acharya has your full palm reading ready.
+                </p>
+              </div>
+              <div className="space-y-2 rounded-3xl border border-accent/20 bg-card p-6 text-left">
+                <div className="flex items-center gap-2 text-sm">
+                  <CheckCircle2 className="size-4 text-accent" />
+                  <span>Premium access active</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-accent">✓</span>
-                  <span>Confirmation email sent</span>
+                <div className="flex items-center gap-2 text-sm">
+                  <CheckCircle2 className="size-4 text-accent" />
+                  <span>Full Shastra reading revealed</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-accent">✓</span>
+                <div className="flex items-center gap-2 text-sm">
+                  <CheckCircle2 className="size-4 text-accent" />
                   <span>30-day money-back guarantee active</span>
                 </div>
               </div>
-            </div>
-          </>
-        ) : failed ? (
-          <div className="space-y-4">
-            <div className="text-6xl mb-4 text-destructive">✕</div>
-            <h1 className="text-4xl font-serif mb-2">Payment not completed</h1>
-            <p className="text-foreground/70">
-              This checkout session expired or was not completed. No charge was made — you can try
-              again anytime.
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <div className="text-6xl mb-4 text-amber-500">⏳</div>
-            <h1 className="text-4xl font-serif mb-2">Payment pending</h1>
-            <p className="text-foreground/70">
-              We couldn't confirm your payment yet. If you completed checkout, this should resolve
-              shortly — check your email for a receipt, or contact support if it persists.
-            </p>
-          </div>
-        )}
-
-        <div className="space-y-3">
-          {confirmed && (
-            <Link
-              to="/scan"
-              className="w-full inline-block bg-accent text-accent-foreground py-3 rounded-lg font-semibold hover:bg-accent/90 transition-all"
-            >
-              Start Your Premium Reading
-            </Link>
+            </>
+          ) : failed ? (
+            <>
+              <div
+                data-testid="success-failed"
+                className="mx-auto size-20 rounded-full bg-destructive/10 border-2 border-destructive flex items-center justify-center"
+              >
+                <XCircle className="size-10 text-destructive" />
+              </div>
+              <div className="space-y-2">
+                <h1 className="text-3xl md:text-4xl font-serif">Payment not confirmed</h1>
+                <p className="text-foreground/70">
+                  {message || "The signature could not be verified. No amount was captured — you can try again safely."}
+                </p>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="mx-auto size-20 rounded-full bg-amber-500/10 border-2 border-amber-500 flex items-center justify-center">
+                <span className="text-3xl">⏳</span>
+              </div>
+              <div className="space-y-2">
+                <h1 className="text-3xl md:text-4xl font-serif">Payment pending</h1>
+                <p className="text-foreground/70">
+                  Your bank is still processing this transaction. It usually resolves within a few
+                  minutes — no need to pay again.
+                </p>
+              </div>
+            </>
           )}
-          <Link
-            to="/"
-            className="w-full inline-block bg-accent/20 text-foreground py-3 rounded-lg font-semibold hover:bg-accent/30 transition-all"
-          >
-            Back to Home
-          </Link>
-        </div>
 
-        {sessionId && (
-          <div className="text-xs text-foreground/60 space-y-2">
-            <p>Session ID: {sessionId}</p>
-            {confirmed && <p>Check your email for receipt and account details</p>}
+          <div className="space-y-3">
+            {confirmed && (
+              <Link
+                data-testid="success-read-cta"
+                to="/reading"
+                className="w-full inline-block bg-accent text-accent-foreground py-3 rounded-full font-bold text-sm hover:scale-[1.02] transition-transform shadow-gold"
+              >
+                Reveal my full reading →
+              </Link>
+            )}
+            <Link
+              to="/"
+              className="w-full inline-block bg-card border border-border text-foreground py-3 rounded-full font-semibold text-sm hover:border-accent transition-all"
+            >
+              Back to home
+            </Link>
           </div>
-        )}
-      </div>
+
+          {(paymentId || plan) && (
+            <div className="text-[10px] font-mono text-foreground/40 space-y-1 pt-4">
+              {plan && <div>Plan: {plan}</div>}
+              {paymentId && <div>Payment ID: {paymentId}</div>}
+            </div>
+          )}
+        </div>
+      </main>
     </div>
   );
 }
