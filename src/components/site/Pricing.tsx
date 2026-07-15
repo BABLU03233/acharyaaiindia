@@ -144,7 +144,7 @@ export function Pricing() {
                 <div>
                   {plan.price !== null ? (
                     <div className="flex items-baseline gap-1">
-                      <span className="text-4xl font-bold">${plan.price}</span>
+                      <span className="text-4xl font-bold">₹{plan.price.toLocaleString("en-IN")}</span>
                       <span className="text-foreground/60">{plan.period}</span>
                     </div>
                   ) : (
