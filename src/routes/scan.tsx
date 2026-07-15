@@ -533,7 +533,13 @@ function CaptureStep({
                 muted
                 className="absolute inset-0 w-full h-full object-cover"
               />
-              <PalmGuide />
+              <FrameBrackets />
+              {/* Status pill — reminds user to show palm */}
+              <div className="absolute top-3 left-1/2 -translate-x-1/2 flex items-center gap-2 rounded-full bg-background/80 backdrop-blur-sm border border-border px-3 py-1.5 text-[11px] font-semibold text-foreground/80">
+                <span className="size-1.5 rounded-full bg-accent animate-pulse" />
+                Show your open palm
+              </div>
+
               {!streaming && (
                 <div className="absolute inset-0 flex items-center justify-center bg-background/40">
                   <div className="size-10 rounded-full border-2 border-accent/30 border-t-accent animate-spin" />
