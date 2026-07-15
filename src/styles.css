@@ -30,6 +30,8 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-gold: var(--gold);
+  --color-navy: var(--navy);
 
   --font-serif: "Playfair Display", ui-serif, Georgia, serif;
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
@@ -42,67 +44,120 @@
 
   --ease-cinematic: cubic-bezier(0.32, 0.72, 0, 1);
 
-  --animate-scan: scan-line 3s linear infinite;
+  --animate-scan: scan-line 3.2s cubic-bezier(0.22, 0.9, 0.51, 1) infinite;
   --animate-float: float 6s ease-in-out infinite;
-  --animate-pulse-gold: pulse-gold 3s var(--ease-cinematic) infinite;
+  --animate-pulse-gold: pulse-divine 3s var(--ease-cinematic) infinite;
   --animate-marquee: marquee 40s linear infinite;
   --animate-trace: trace 2.8s var(--ease-cinematic) forwards;
+  --animate-shimmer: shimmer 3s ease-in-out infinite;
+  --animate-glow: glow 3s ease-in-out infinite;
 
   @keyframes scan-line {
-    0% { transform: translateY(-100%); }
-    100% { transform: translateY(400%); }
+    0% {
+      transform: translateY(-100%);
+      opacity: 0;
+    }
+    10% {
+      opacity: 1;
+    }
+    90% {
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(400%);
+      opacity: 0;
+    }
   }
   @keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-10px); }
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-15px);
+    }
   }
-  @keyframes pulse-gold {
-    0%, 100% { opacity: 0.4; }
-    50% { opacity: 1; }
+  @keyframes pulse-divine {
+    0%,
+    100% {
+      opacity: 0.5;
+      filter: drop-shadow(0 0 8px rgba(157, 124, 196, 0.3));
+    }
+    50% {
+      opacity: 1;
+      filter: drop-shadow(0 0 20px rgba(157, 124, 196, 0.6));
+    }
+  }
+  @keyframes shimmer {
+    0%,
+    100% {
+      opacity: 0.6;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+  @keyframes glow {
+    0%,
+    100% {
+      box-shadow: 0 0 20px rgba(157, 124, 196, 0.3);
+    }
+    50% {
+      box-shadow: 0 0 40px rgba(157, 124, 196, 0.6);
+    }
   }
   @keyframes marquee {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(-50%); }
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-50%);
+    }
   }
   @keyframes trace {
-    to { stroke-dashoffset: 0; }
+    to {
+      stroke-dashoffset: 0;
+    }
   }
 }
 
 :root {
   --radius: 1rem;
 
-  /* Acharya AI luxury palette */
-  --background: oklch(0.12 0.005 60);
-  --foreground: oklch(0.97 0.01 80);
+  /* Acharya AI — Grantha palette: deep indigo blue + temple gold, matching the crest logo */
+  --background: #fdfaf3;
+  --background-gradient: linear-gradient(135deg, #fdfaf3 0%, #fbf3e2 50%, #fdf6ea 100%);
+  --background-solid: #fdfaf3;
+  --foreground: #14213d;
 
-  --card: oklch(0.16 0.006 70);
-  --card-foreground: oklch(0.97 0.01 80);
+  --card: #ffffff;
+  --card-foreground: #14213d;
 
-  --popover: oklch(0.16 0.006 70);
-  --popover-foreground: oklch(0.97 0.01 80);
+  --popover: #ffffff;
+  --popover-foreground: #14213d;
 
-  /* Primary = gold */
-  --primary: oklch(0.78 0.13 82);
-  --primary-foreground: oklch(0.12 0.005 60);
+  /* Primary = Grantha Blue (deep indigo navy) */
+  --primary: #14213d;
+  --primary-foreground: #ffffff;
 
-  --secondary: oklch(0.22 0.01 70);
-  --secondary-foreground: oklch(0.97 0.01 80);
+  /* Secondary = Temple Gold tint */
+  --secondary: #f3ddac;
+  --secondary-foreground: #5a3d0a;
 
-  --muted: oklch(0.2 0.008 70);
-  --muted-foreground: oklch(0.68 0.02 80);
+  --muted: #faf1dd;
+  --muted-foreground: #5c6584;
 
-  /* Accent = gold (used as the brand gold token) */
-  --accent: oklch(0.78 0.13 82);
-  --accent-foreground: oklch(0.12 0.005 60);
-  --accent-muted: oklch(0.6 0.09 80);
+  /* Accent = Grantha Gold (bright, saturated amber-orange) */
+  --accent: #c1791a;
+  --accent-foreground: #ffffff;
+  --accent-muted: #fbe8c6;
 
-  --destructive: oklch(0.6 0.22 25);
-  --destructive-foreground: oklch(0.97 0.01 80);
+  --destructive: #b3261e;
+  --destructive-foreground: #ffffff;
 
-  --border: oklch(0.78 0.13 82 / 0.15);
-  --input: oklch(0.78 0.13 82 / 0.2);
-  --ring: oklch(0.78 0.13 82);
+  --border: #ecdcb4;
+  --input: #fdf6ea;
+  --ring: #c1791a;
 
   --sidebar: var(--card);
   --sidebar-foreground: var(--foreground);
@@ -113,30 +168,38 @@
   --sidebar-border: var(--border);
   --sidebar-ring: var(--ring);
 
-  --chart-1: oklch(0.78 0.13 82);
-  --chart-2: oklch(0.6 0.09 80);
-  --chart-3: oklch(0.5 0.18 30);
-  --chart-4: oklch(0.4 0.1 290);
-  --chart-5: oklch(0.7 0.05 70);
+  --chart-1: #c1791a;
+  --chart-2: #14213d;
+  --chart-3: #d4af37;
+  --chart-4: #f3ddac;
+  --chart-5: #5c6584;
 
-  --gradient-gold: linear-gradient(135deg, oklch(0.86 0.14 88), oklch(0.55 0.1 70));
-  --gradient-aura: radial-gradient(ellipse at top, oklch(0.78 0.13 82 / 0.18), transparent 60%);
-  --shadow-gold: 0 0 40px -10px oklch(0.78 0.13 82 / 0.5);
-  --shadow-gold-sm: 0 0 20px -5px oklch(0.78 0.13 82 / 0.35);
+  --gold: #d4af37;
+  --navy: #14213d;
+
+  --gradient-divine: linear-gradient(135deg, #14213d 0%, #c1791a 100%);
+  --gradient-aura: radial-gradient(ellipse at top, rgba(193, 121, 26, 0.12), transparent 60%);
+  --shadow-divine: 0 14px 50px -18px rgba(20, 33, 61, 0.35);
+  --shadow-divine-sm: 0 6px 22px -6px rgba(20, 33, 61, 0.22);
 }
 
-/* Force dark by default — luxury app */
+/* Light divine theme */
 .dark {
-  --background: oklch(0.12 0.005 60);
-  --foreground: oklch(0.97 0.01 80);
+  --background-solid: #0b1224;
+  --foreground: #fff3e0;
 }
 
 @layer base {
   * {
     border-color: var(--color-border);
   }
-  html, body {
-    background-color: var(--color-background);
+  html {
+    scroll-behavior: smooth;
+  }
+  html,
+  body {
+    background-color: var(--background-solid);
+    background-image: var(--background-gradient);
     color: var(--color-foreground);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
@@ -145,17 +208,57 @@
     background: var(--accent);
     color: var(--accent-foreground);
   }
-  .font-serif { font-family: var(--font-serif); }
-  .font-mono { font-family: var(--font-mono); }
-  .no-scrollbar::-webkit-scrollbar { display: none; }
-  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  .font-serif {
+    font-family: var(--font-serif);
+  }
+  .font-mono {
+    font-family: var(--font-mono);
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
   .text-gradient-gold {
-    background: var(--gradient-gold);
+    background: var(--gradient-divine);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
   }
-  .bg-aura { background-image: var(--gradient-aura); }
-  .shadow-gold { box-shadow: var(--shadow-gold); }
-  .shadow-gold-sm { box-shadow: var(--shadow-gold-sm); }
+  .bg-aura {
+    background-image: var(--gradient-aura);
+  }
+  .bg-gradient-divine {
+    background-image: var(--gradient-divine);
+  }
+  .shadow-gold {
+    box-shadow: var(--shadow-divine);
+  }
+  .shadow-gold-sm {
+    box-shadow: var(--shadow-divine-sm);
+  }
+  .shadow-divine {
+    box-shadow: var(--shadow-divine);
+  }
+  .shadow-divine-sm {
+    box-shadow: var(--shadow-divine-sm);
+  }
+  .soft-card {
+    background: linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--card) 92%, transparent),
+      color-mix(in srgb, var(--card) 80%, var(--accent) 8%)
+    );
+    box-shadow: 0 20px 40px -20px color-mix(in srgb, var(--accent) 20%, transparent);
+  }
+  .glass-panel {
+    backdrop-filter: blur(20px);
+    background: color-mix(in srgb, var(--card) 85%, transparent);
+  }
+  .section-surface {
+    border: 1px solid color-mix(in srgb, var(--border) 90%, transparent);
+    background: color-mix(in srgb, var(--card) 70%, transparent);
+  }
 }

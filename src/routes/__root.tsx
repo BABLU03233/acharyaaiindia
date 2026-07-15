@@ -9,6 +9,7 @@ import {
 } from "@tanstack/react-router";
 
 import appCss from "../styles.css?url";
+import { getSecurityHeaders } from "@/lib/security";
 
 function NotFoundComponent() {
   return (
@@ -68,6 +69,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
+  headers: () => getSecurityHeaders(),
   head: () => ({
     meta: [
       { charSet: "utf-8" },

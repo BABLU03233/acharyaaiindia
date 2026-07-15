@@ -18,6 +18,13 @@ const errorMiddleware = createMiddleware().server(async ({ next }) => {
   }
 });
 
+// Security headers (CSP, HSTS, frame/XSS protection, camera Permissions-Policy)
+// are NOT attached here — a global requestMiddleware did not reliably reach
+// `server.handlers` API route responses in testing. Instead:
+//   - Page responses get them via the root route's `headers()` option (see __root.tsx).
+//   - API routes get them via `withSecurityHeaders()` wrapped around each
+//     handler's Response (see src/lib/security.ts and the api.*.ts route files).
+
 export const startInstance = createStart(() => ({
   functionMiddleware: [attachSupabaseAuth],
   requestMiddleware: [errorMiddleware],
