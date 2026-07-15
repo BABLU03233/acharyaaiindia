@@ -12,4 +12,16 @@ export default defineConfig({
   tanstackStart: {
     server: { entry: "server" },
   },
+  vite: {
+    server: {
+      // Emergent preview / sandbox routes traffic through rotating *.emergentagent.com
+      // and *.emergentcf.cloud hostnames — allow all to prevent Vite's host header block.
+      allowedHosts: true,
+      host: "0.0.0.0",
+      hmr: {
+        clientPort: 443,
+        protocol: "wss",
+      },
+    },
+  },
 });

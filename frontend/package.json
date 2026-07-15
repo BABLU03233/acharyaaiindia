@@ -1,0 +1,9 @@
+{
+  "name": "acharyaai-frontend-wrapper",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Supervisor wrapper that boots the TanStack Start (Vite) dev server for the acharyaaiindia app at /app.",
+  "scripts": {
+    "start": "cd /app && node ./frontend/start.cjs"
+  }
+}
