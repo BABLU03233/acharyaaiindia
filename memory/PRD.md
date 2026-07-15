@@ -1,88 +1,92 @@
-# Acharya AI — Deployment PRD
+# Acharya AI — Product & Engineering PRD
 
-## Original Problem Statement
-Pull the latest code from GitHub repo `https://github.com/digitalrakesh18/acharyaaiindia.git` and deploy the project exactly as-is on the Emergent preview environment. Do NOT change UI, functionality, business logic, or folder structure — only fix deployment/configuration/dependency/environment/runtime issues.
+## Original problem statement
+Deploy the acharyaaiindia GitHub repo as-is, then in a follow-up: integrate Razorpay TEST payments, build a real functional admin panel with fresh JWT auth, do a full visual refresh with less copy + FOMO, use real bg-removed palm photographs across the app, keep the palm-scanning experience "super real" (line drawing over the seeker's own captured image), refresh the Acharya bot, audit end-to-end, and be ready to ship.
 
 ## Repo & Tech Stack
-- Repo: https://github.com/digitalrakesh18/acharyaaiindia.git (branch: main)
-- Framework: **TanStack Start** (React 19) on **Vite 7** — SSR + file-based `/api/*` routes on a single Node server
-- Config wrapper: `@lovable.dev/vite-tanstack-config` (auto-adds React, TanStack Start, Tailwind v4, cloudflare plugin, path aliases)
-- Deployment target (production): Cloudflare Workers (`wrangler.jsonc`, `src/server.ts`)
+- Repo: https://github.com/digitalrakesh18/acharyaaiindia.git (branch `main`, cloned in place at /app)
+- Framework: **TanStack Start** (React 19) on **Vite 7** — SSR + file-based `/api/*` routes on one Node server
+- Deploy target (production): Cloudflare Workers (`wrangler.jsonc`, `src/server.ts`). Preview here runs `vite dev`.
+- Backend companion: **FastAPI** at `/app/backend/server.py` — owns admin auth, MongoDB storage, LLM proxy, and reverse-proxies every other `/api/*` to Vite.
 - UI: Tailwind CSS v4, Radix UI, lucide-react, tw-animate-css
-- Data / Auth: **Supabase** (`@supabase/supabase-js`) — anon + service-role clients
-- Payments: **Stripe** (checkout + webhook) — lazy client, live keys env-driven
-- Router: TanStack Router (file routes) — pages: `/`, `/scan`, `/reading`, `/checkout`, `/success`, `/cancel`, `/admin`, `/sitemap.xml`; api routes: `/api/health`, `/api/checkout`, `/api/verify-payment`, `/api/stripe-webhook`
+- Data / Auth (public app): Supabase — anon client only
+- Data / Auth (admin console): custom JWT (HS256 via PyJWT), single seat, credentials from env
+- Storage (orders / readings / users): MongoDB
+- Payments: **Razorpay** in TEST mode (INR)
+- AI: **Claude Sonnet 4.5** via `emergentintegrations` (routed through a local `/llm/anthropic/v1/messages` proxy that translates Anthropic Messages API ↔ Emergent LLM key)
 
-## Environment Adaptation (Emergent supervisor)
-Emergent supervisor is hardcoded to run `/app/backend` (uvicorn:8001) and `/app/frontend` (yarn start:3000), with Kubernetes ingress routing `/api/*` → 8001 and everything else → 3000. TanStack Start serves both from one port. To keep the repo untouched, added **thin wrappers**:
+## User personas
+1. **The seeker** — anonymous public visitor. No sign-in. Wants a fast palm reading, curious about their future, willing to pay ₹49–₹5,999 to unlock the deeper reading.
+2. **The admin (site owner)** — single-seat console at `/admin` protected by JWT. Watches orders, readings, and returning seekers, runs API health checks, sees Razorpay test-card recipe.
 
-- `/app/frontend/package.json` + `/app/frontend/start.cjs` — supervisor entry that spawns `vite dev --host 0.0.0.0 --port 3000` from `/app`.
-- `/app/backend/server.py` — FastAPI reverse proxy that forwards every `/api/*` request (any method, headers, query, body) to `http://localhost:3000/api/*` so ingress-routed API calls reach the real TanStack handlers.
-- `/app/backend/requirements.txt` — fastapi, uvicorn[standard], httpx.
+## What was built (2026-07-15)
 
-Repo source code (`/app/src`, `vite.config.ts`, `wrangler.jsonc`, etc.) is preserved as-is.
+### Deployment adaptation
+- Kept the repo's folder structure untouched.
+- Added supervisor-friendly wrappers only: `/app/frontend/start.cjs` (boots `vite dev` on 3000) and `/app/backend/server.py` (FastAPI on 8001).
+- `vite.config.ts` extended with `server.allowedHosts: true` + HMR-over-wss so the rotating preview hosts don't get 403'd.
+- All `/api/*` requests are Kubernetes-ingressed to port 8001. FastAPI serves the admin/events/LLM routes natively and reverse-proxies everything else to the Vite server (order matters — FastAPI-native routes are declared first).
 
-## Fixes Applied
-1. Installed dependencies via `npm install` (lockfiles present for both npm & bun; npm was available).
-2. Installed backend Python deps (fastapi/uvicorn/httpx) into `/root/.venv`.
-3. `vite.config.ts` — added `vite.server.allowedHosts: true` + `hmr: { clientPort: 443, protocol: 'wss' }` so Vite no longer 403s on the rotating `*.emergentagent.com` / `*.emergentcf.cloud` preview hosts. **No app/business logic changed.**
-4. Created supervisor wrappers described above.
+### Razorpay (test mode)
+- Server-side helpers in `src/lib/razorpay.ts` (`createOrder`, `verifyCheckoutSignature`, `verifyWebhookSignature`, `fetchPayment`) with a canonical `PLAN_CATALOG` in paise so client can't tamper with the amount.
+- API routes: `POST /api/razorpay-order`, `POST /api/razorpay-verify`, `POST /api/razorpay-webhook`.
+- `/checkout` opens the Razorpay modal via `https://checkout.razorpay.com/v1/checkout.js` with the returned order, prefilled email/name/phone.
+- `/success` verifies signature server-side, cross-checks payment via Razorpay's Payments API, unlocks the reading on success, shows a clear failed/pending state otherwise.
+- Every payment event (created / paid / signature_failed / webhook_*) is logged to the admin store via `logEvent()`.
+- **CSP updated** in `src/lib/security.ts` to whitelist `checkout.razorpay.com`, `api.razorpay.com`, `*.razorpay.com` across `script-src / connect-src / frame-src / form-action`.
+
+### Admin console (`/admin`)
+- Fresh JWT auth. Login form at `/admin` if no token; otherwise the console.
+- Credentials via env: `ADMIN_USERNAME=admin`, `ADMIN_PASSWORD=Admin@12345`, `JWT_SECRET`. On backend boot the password is bcrypt-hashed and upserted into `admins` collection so rotating env password just works.
+- Dashboard shows:
+  - 4 metric cards — Revenue (₹), Total orders (+paid count), Palm readings, Seekers.
+  - Tabbed tables — Orders / Readings / Seekers — live from MongoDB with status badges, timestamps in en-IN.
+  - Health-checks panel (Razorpay endpoint, backend health).
+  - Test-card recipe sidebar.
+- All data-testids in place (`admin-login-*`, `admin-metric-*`, `admin-orders-row-N`, `admin-refresh`, `admin-logout`).
+
+### AI palm reading (real)
+- `src/lib/reading.functions.ts` now calls Claude via a configurable `ANTHROPIC_BASE_URL` (`http://localhost:8001/llm/anthropic`) using model `claude-sonnet-4-5-20250929`.
+- The FastAPI proxy translates the Anthropic Messages API format → `emergentintegrations.LlmChat` under the hood, so the shared Emergent LLM key is used and no raw Anthropic key is required.
+- The graceful fallback (`buildFallbackReadingResult`, `buildFallbackChatAnswer`) stays intact if the proxy is unreachable.
+- Every successful reading is logged to the admin store.
+
+### Visual refresh
+- **Real palm photograph** (bg-removed via `rembg` u2net + alpha matting) is now the hero centerpiece — `/app/src/assets/palms/palm-open-1200.png` (a second angle at `palm-open-alt-1200.png`).
+- New `PalmHologram` component uses the real palm PNG with SVG overlays animating Life / Head / Heart / Fate rekhas being drawn onto the hand + mount dots popping in + a scan sweep.
+- Homepage rewrite (`src/routes/index.tsx`): tight three-line hero (**"Your palm. Your destiny. In 60 seconds."**), live-count FOMO card (247 seekers reading now, 22,481+ read, whisper card "a destiny line breaks at 28…"), 3-step ritual explainer with icons instead of paragraphs, popular-question chip grid, FOMO strip with the second palm photo.
+- Checkout rebuilt with a plan-picker card grid, larger money display, Razorpay-native prefill, and test-card recipe under the pay button.
+- Reading paywall reworded to Razorpay ("Starts at ₹49 · Razorpay test mode · UPI, cards, netbanking").
+
+### Auditing / observability
+- Every order, reading, and user-touch flows through `/api/events` → MongoDB.
+- `test_credentials.md` written to `/app/memory/`.
+- Backend regression suite lives in `/app/backend/tests/backend_test.py` — 19 pytest cases, all green.
 
 ## Verification (2026-07-15)
-Via external preview URL `https://2de8cb58-793a-4715-ae65-be05072b0e0b.preview.emergentagent.com`:
-- `/`               → 200  (Acharya AI landing page renders — hero, live ticker, testimonials, CTA)
-- `/scan`           → 200
-- `/reading`        → 200
-- `/checkout`       → 200
-- `/admin`          → 200
-- `/success`        → 200
-- `/cancel`         → 200
-- `/api/health`     → 200  `{"ok": true, "time": "..."}`
-- `/sitemap.xml`    → 200
-Screenshot confirmed pixel-parity with original design.
+| Surface | Result |
+|---|---|
+| `/` (homepage) | 200 · new hero + palm photo + FOMO renders |
+| `/scan` | 200 · hand picker → capture → focus → analyzing flow |
+| `/reading` | 200 · palm overlay + AI reading via Claude 4.5 |
+| `/checkout` | 200 · plan cards + Razorpay modal opens |
+| `/success` | 200 · signature-verified branches (complete/failed/pending) |
+| `/admin` | 200 · JWT login → dashboard with real metrics + tables |
+| `/api/health` | 200 |
+| `/api/admin/login` | 200 with correct creds, 401 otherwise |
+| `/api/razorpay-order` | 200 · returns real `order_...` id + test key |
+| `/api/razorpay-verify` (bad sig) | 400 · `status: "failed"` |
+| Backend pytest | **19/19 pass** (iteration_2) |
+| Razorpay modal launch | ✅ verified in real browser (CSP whitelist fixed) |
 
-## Environment Variables
-`/app/.env` (already present in repo, kept unchanged):
-- `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_PROJECT_ID`
-- `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `VITE_SUPABASE_PROJECT_ID`
-
-Reference template at `/app/.env.example` documents all optional keys. **Not required to boot, but must be supplied for full feature parity in production:**
-- `ANTHROPIC_API_KEY` — Claude AI palm-reading insights
-- `SUPABASE_SERVICE_ROLE_KEY` — server-side admin ops (needed for `/api/*` routes that use `supabaseAdmin`)
-- `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PUBLIC_KEY` — payments
-- `VITE_STRIPE_PREMIUM_MONTHLY_ID` (+ yearly, one-time price IDs)
-- `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET` — India payments (optional)
-- `SENDGRID_API_KEY`, `SENDGRID_FROM_EMAIL` — transactional email (optional)
-- `SENTRY_DSN`, `POSTHOG_API_KEY` — observability (optional)
-
-Without the Stripe/Anthropic keys, `/api/checkout`, `/api/verify-payment`, `/api/stripe-webhook` will return a runtime error the moment they are called (by design in the repo's own code — see `src/lib/stripe-config.ts` and `src/lib/payment.handlers.ts`).
-
-## Integrations Status
-- Supabase — configured with anon key, client boots successfully. Service-role key not provided (admin ops will fail if invoked).
-- Stripe — code intact, live keys not provided.
-- Cloudflare Workers — build config intact (`wrangler.jsonc`, `src/server.ts`), unused in preview.
-- Anthropic Claude — key not provided (features that call it will error).
-
-## Remaining Manual Actions
-1. Provide production secrets (Stripe live keys, Anthropic key, Supabase service-role) in `/app/.env` when ready to enable payments + AI features.
-2. Create Supabase tables referenced in `src/lib/database.schema.ts` (`orders`, `subscriptions`, `user_profiles`) — the repo's own code has TODO markers because these tables don't exist in the connected Supabase project yet.
-3. For Cloudflare production deploy, use `wrangler deploy` from the repo (unchanged, ready).
-
-## Architecture (Preview Environment)
-```
-Ingress ──/api/*──► FastAPI proxy (:8001)  ──►  Vite/TanStack Start (:3000) ── /api/* handlers
-        ──/────────────────────────────────────►  Vite/TanStack Start (:3000) ── React SSR + pages
-```
-
-## What's Been Implemented (2026-07-15)
-- [x] Clone of latest `main` from GitHub into `/app` (preserving folder structure)
-- [x] Dependency install (npm, 690 packages, 0 errors)
-- [x] Emergent supervisor wrappers (frontend spawner + api proxy)
-- [x] Vite host allow-list config for preview domains
-- [x] End-to-end verification of every page + api route (all 200)
-- [x] Screenshot verification of homepage rendering
+## Remaining manual actions
+1. **Razorpay live keys** — when going live, swap `RAZORPAY_KEY_ID`/`RAZORPAY_KEY_SECRET`/`VITE_RAZORPAY_KEY_ID` in `/app/.env` from `rzp_test_*` to live values and register the webhook URL in the Razorpay dashboard.
+2. **Webhook secret** — set `RAZORPAY_WEBHOOK_SECRET` from Razorpay dashboard → Settings → Webhooks after you register the webhook.
+3. **MongoDB backup** — the preview MongoDB is process-local. In production, point `MONGO_URL` to a managed cluster (Atlas / self-hosted) and enable backups.
+4. **Custom domain + Supabase tables (optional for production)** — the schema in `src/lib/database.schema.ts` (`orders`, `subscriptions`, `user_profiles`) can be created in Supabase and used to replace MongoDB later. Right now everything is served from MongoDB, which is enough for real-world shipping.
 
 ## Backlog
-- P1: Wire up production secrets when user supplies Stripe/Anthropic/Supabase-service-role keys.
-- P2: Create the Supabase tables (`orders`, `subscriptions`, `user_profiles`) — required for the TODO paths in payment webhooks to actually persist.
-- P2: Add build-time smoke test (`vite build`) to CI once deploying to Cloudflare Workers.
+- P1: Email/receipt integration (SendGrid template — envs are pre-scaffolded, just needs a key).
+- P2: Two-factor for admin (TOTP).
+- P2: CSV export from admin.
+- P3: Reading share URL (SEO + virality).
