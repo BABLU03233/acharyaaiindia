@@ -780,7 +780,7 @@ function getPalmAcceptance(annotations: Annotations): ValidateResult {
 }
 
 export const generateReading = createServerFn({ method: "POST" })
-  .validator((d: ReadingInput) => d)
+  .inputValidator((d: ReadingInput) => d)
   .handler(async ({ data }): Promise<ReadingResult> => {
     enforceAiRateLimit("generateReading");
     const hasImage =
@@ -875,7 +875,7 @@ Rules:
   });
 
 export const askAcharya = createServerFn({ method: "POST" })
-  .validator((d: AskInput) => d)
+  .inputValidator((d: AskInput) => d)
   .handler(async ({ data }): Promise<AskResult> => {
     enforceAiRateLimit("askAcharya");
     if (!data.question?.trim()) throw new Error("Question is empty");
@@ -945,7 +945,7 @@ Reply in 2–4 short, natural, human sentences — warm spoken tone, no lists, n
   });
 
 export const scanPalmFrame = createServerFn({ method: "POST" })
-  .validator((d: ValidateInput) => d)
+  .inputValidator((d: ValidateInput) => d)
   .handler(async ({ data }): Promise<ScanFrameResult> => {
     enforceAiRateLimit("scanPalmFrame", RATE_LIMITS.LIVE_SCAN);
     if (!data.imageDataUrl?.startsWith("data:image")) {
@@ -976,7 +976,7 @@ export const scanPalmFrame = createServerFn({ method: "POST" })
   });
 
 export const validatePalm = createServerFn({ method: "POST" })
-  .validator((d: ValidateInput) => d)
+  .inputValidator((d: ValidateInput) => d)
   .handler(async ({ data }): Promise<ValidateResult> => {
     enforceAiRateLimit("validatePalm", RATE_LIMITS.LIVE_SCAN);
     if (!data.imageDataUrl?.startsWith("data:image")) {
