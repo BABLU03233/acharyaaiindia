@@ -40,6 +40,13 @@ function SuccessPage() {
       if (response.ok) {
         const data = (await response.json()) as { status: VerifyStatus };
         setStatus(data.status);
+        if (data.status === "complete") {
+          try {
+            localStorage.setItem("hasta:unlocked", "true");
+          } catch {
+            /* ignore */
+          }
+        }
       } else {
         setStatus("unknown");
       }

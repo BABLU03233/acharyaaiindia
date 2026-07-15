@@ -87,6 +87,16 @@ function Reading() {
   const [storedAnnotations, setStoredAnnotations] = useState<Annotations | undefined>(undefined);
   const [selectedQuestion, setSelectedQuestion] = useState<string | null>(null);
   const [focus, setFocus] = useState<string | null>(null);
+  const [unlocked, setUnlocked] = useState(false);
+  const [showPaywall, setShowPaywall] = useState(false);
+
+  useEffect(() => {
+    try {
+      setUnlocked(localStorage.getItem("hasta:unlocked") === "true");
+    } catch {
+      /* ignore */
+    }
+  }, []);
 
   useEffect(() => {
     const h =
