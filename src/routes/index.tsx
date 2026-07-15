@@ -4,7 +4,7 @@ import { SiteFooter } from "@/components/site/Footer";
 import { LiveTicker } from "@/components/site/LiveTicker";
 import { PalmHologram } from "@/components/site/PalmHologram";
 import { QuestionChips } from "@/components/site/QuestionChips";
-import { Pricing } from "@/components/site/Pricing";
+
 import { FAQ } from "@/components/site/FAQ";
 import { Testimonials } from "@/components/site/Testimonials";
 import { OmParallax } from "@/components/site/OmParallax";
@@ -376,8 +376,6 @@ function Landing() {
         </section>
 
         <Testimonials />
-
-        <Pricing />
 
         <FAQ />
 

@@ -128,21 +128,21 @@ function CheckoutPage() {
   const planDetails = {
     monthly: {
       name: "Premium Monthly",
-      price: "₹499",
+      price: "₹699",
       period: "per month",
-      description: "Unlimited palm scans and advanced readings",
+      description: "Unlimited readings and unlimited chat with Acharya",
     },
     yearly: {
       name: "Premium Yearly",
-      price: "₹4,999",
+      price: "₹5,999",
       period: "per year",
-      description: "Save 17% with annual billing",
+      description: "Best value — everything in Monthly, save 28%",
     },
     "one-time": {
-      name: "Premium Reading",
-      price: "₹99",
+      name: "Full Reading Unlock",
+      price: "₹49",
       period: "one-time",
-      description: "Single advanced reading with full analysis",
+      description: "Unlock the complete Shastra reading for this palm",
     },
   };
 

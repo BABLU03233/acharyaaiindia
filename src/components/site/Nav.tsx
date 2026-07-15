@@ -7,7 +7,6 @@ import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/s
 const NAV_LINKS = [
   { href: "/#shastra", label: "The Shastra" },
   { href: "/#how", label: "How It Works" },
-  { href: "/#pricing", label: "Pricing" },
 ];
 
 function Logo() {
