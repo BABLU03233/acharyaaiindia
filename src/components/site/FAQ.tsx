@@ -1,4 +1,9 @@
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 const FAQS = [
   {
@@ -25,9 +30,11 @@ const FAQS = [
 
 export function FAQ() {
   return (
-    <section className="py-24 max-w-3xl mx-auto">
+    <section id="faq" className="py-24 max-w-3xl mx-auto">
       <div className="text-center mb-12 space-y-4">
-        <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-accent">Inquiries</span>
+        <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-accent">
+          Inquiries
+        </span>
         <h2 className="text-4xl md:text-5xl font-serif">Questions seekers ask</h2>
       </div>
       <Accordion type="single" collapsible className="w-full">
@@ -36,7 +43,9 @@ export function FAQ() {
             <AccordionTrigger className="text-left font-serif text-lg hover:text-accent hover:no-underline">
               {f.q}
             </AccordionTrigger>
-            <AccordionContent className="text-foreground/60 leading-relaxed">{f.a}</AccordionContent>
+            <AccordionContent className="text-foreground/60 leading-relaxed">
+              {f.a}
+            </AccordionContent>
           </AccordionItem>
         ))}
       </Accordion>

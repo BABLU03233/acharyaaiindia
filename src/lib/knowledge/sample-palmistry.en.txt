@@ -1,0 +1,11 @@
+English summary (draft):
+
+Supplementary palmistry notes (summary). This file contains a short English overview of concepts in the sample palmistry treatise included in the knowledge base. It lists supplemental interpretations, common signs, and additional heuristics referenced by the Acharya persona. Please review and replace with verified translations when available.
+
+Canonical terms included here for developer reference:
+- Jeevan Rekha
+- Hridaya Rekha
+- Bhagya Rekha
+- Vivah Rekha
+- Guru
+- Shukra

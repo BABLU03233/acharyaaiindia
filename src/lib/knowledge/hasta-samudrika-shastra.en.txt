@@ -1,0 +1,17 @@
+English summary (draft):
+
+This document is an English summary placeholder for the original Hasta Samudrika Shastra source text (Telugu OCR). The original contains classical palmistry rules: descriptions of mounts (Guru, Shukra, Surya, Shani, etc.), major rekhas (Jeevan Rekha, Hridaya Rekha, Bhagya Rekha, Surya Rekha, Vivah Rekha), and the interpretations of planetary influences on personality, health, wealth, and relationships.
+
+Use this file as a developer-facing summary only. It is NOT a literal translation — please review and replace with verified translations when available.
+
+Canonical terms included here for developer reference:
+- Jeevan Rekha
+- Hridaya Rekha
+- Bhagya Rekha
+- Surya Rekha
+- Vivah Rekha
+- Shukra
+- Guru
+- Mastaka
+- Mulank
+- Bhagyank
