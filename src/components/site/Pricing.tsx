@@ -40,7 +40,7 @@ export function Pricing() {
     {
       name: "Premium Monthly",
       description: "For the devoted seeker",
-      price: billingPeriod === "monthly" ? 9.99 : null,
+      price: billingPeriod === "monthly" ? 499 : null,
       period: "per month",
       badge: "Popular",
       features: [
@@ -60,12 +60,12 @@ export function Pricing() {
     {
       name: "Premium Yearly",
       description: "Best value for annual commitment",
-      price: billingPeriod === "yearly" ? 99.99 : null,
+      price: billingPeriod === "yearly" ? 4999 : null,
       period: "per year",
       badge: "Save 17%",
       features: [
         "Everything in Monthly",
-        "20% annual discount",
+        "2 months free",
         "Priority support",
         "Advanced analytics",
         "Export readings",
