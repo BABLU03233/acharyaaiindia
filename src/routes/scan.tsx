@@ -592,10 +592,39 @@ function CaptureStep({
       )}
 
       {error && !preview && (
-        <div className="max-w-md mx-auto p-3 rounded-2xl border border-destructive/40 bg-destructive/5 text-center text-xs text-destructive">
-          {error}
+        <div className="max-w-md mx-auto space-y-3">
+          <div className="p-3 rounded-2xl border border-destructive/40 bg-destructive/5 text-center text-xs text-destructive">
+            {error}
+          </div>
+          <div className="flex justify-center gap-2">
+            {mode === "camera" && (
+              <button
+                onClick={() => {
+                  setError(null);
+                  captureFromCamera();
+                }}
+                disabled={!streaming || busy}
+                className="flex items-center gap-2 border-2 border-border px-5 py-2.5 rounded-full font-bold text-xs hover:border-accent disabled:opacity-40"
+              >
+                <RefreshCw className="size-3.5" />
+                Retake
+              </button>
+            )}
+            <button
+              onClick={() => {
+                setError(null);
+                setMode("upload");
+                setTimeout(() => triggerFileInput(), 50);
+              }}
+              className="flex items-center gap-2 bg-accent text-accent-foreground px-5 py-2.5 rounded-full font-bold text-xs shadow-gold-sm hover:scale-105 transition-all"
+            >
+              <Upload className="size-3.5" />
+              Upload from gallery
+            </button>
+          </div>
         </div>
       )}
+
 
       {/* Primary action button — the ONLY thing user needs to tap */}
       <div className="flex justify-center gap-3">
