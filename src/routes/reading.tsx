@@ -120,7 +120,7 @@ function Reading() {
         question: focusValue || undefined,
       },
     })
-      .then((r) => !cancelled && setData(r as ReadingData))
+      .then((r: unknown) => !cancelled && setData(r as ReadingData))
       .catch(
         (e: unknown) =>
           !cancelled && setError(e instanceof Error ? e.message : "Failed to generate reading"),
