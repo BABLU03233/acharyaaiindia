@@ -273,24 +273,25 @@ function smoothPath(points: Point[], box: PalmBox) {
   return d;
 }
 
-/** Static palm silhouette guide — shows user exactly where to place their hand */
-function PalmGuide() {
+/** Corner brackets — clean framing, no palm silhouette */
+function FrameBrackets({ tone = "accent" }: { tone?: "accent" | "success" | "danger" }) {
+  const color =
+    tone === "success"
+      ? "hsl(142, 70%, 45%)"
+      : tone === "danger"
+      ? "hsl(0, 75%, 55%)"
+      : "hsla(37, 75%, 55%, 0.85)";
   return (
     <svg
       className="absolute inset-0 w-full h-full pointer-events-none"
-      viewBox="0 0 100 130"
-      preserveAspectRatio="xMidYMid meet"
+      viewBox="0 0 100 100"
+      preserveAspectRatio="none"
     >
-      <g
-        fill="none"
-        stroke="hsla(37, 75%, 55%, 0.55)"
-        strokeWidth="0.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeDasharray="2 2"
-      >
-        {/* palm outline */}
-        <path d="M35 115 Q30 90 32 70 Q28 60 30 45 Q32 35 38 38 L38 25 Q38 18 44 18 Q50 18 50 25 L50 35 Q52 20 58 20 Q64 20 64 28 L64 40 Q66 28 72 30 Q78 32 76 42 L74 55 Q80 55 80 65 Q82 85 72 110 Q60 122 48 122 Q40 122 35 115 Z" />
+      <g fill="none" stroke={color} strokeWidth="0.8" strokeLinecap="round">
+        <path d="M6 18 V6 H18" />
+        <path d="M82 6 H94 V18" />
+        <path d="M94 82 V94 H82" />
+        <path d="M18 94 H6 V82" />
       </g>
     </svg>
   );
@@ -378,7 +379,11 @@ function CaptureStep({
     try {
       const v = await scanFrame({ data: { imageDataUrl: dataUrl } });
       if (!v.isPalm) {
-        setError(v.reason || "That doesn't look like a clear palm. Please try again.");
+        setError(
+          "🖐️ Only a human palm can be scanned. " +
+            (v.reason ? v.reason + " " : "") +
+            "Please hold up your open palm and try again.",
+        );
         setPreview(null);
         setBusy(false);
         setStatus("");
@@ -532,7 +537,13 @@ function CaptureStep({
                 muted
                 className="absolute inset-0 w-full h-full object-cover"
               />
-              <PalmGuide />
+              <FrameBrackets />
+              {/* Status pill — reminds user to show palm */}
+              <div className="absolute top-3 left-1/2 -translate-x-1/2 flex items-center gap-2 rounded-full bg-background/80 backdrop-blur-sm border border-border px-3 py-1.5 text-[11px] font-semibold text-foreground/80">
+                <span className="size-1.5 rounded-full bg-accent animate-pulse" />
+                Show your open palm
+              </div>
+
               {!streaming && (
                 <div className="absolute inset-0 flex items-center justify-center bg-background/40">
                   <div className="size-10 rounded-full border-2 border-accent/30 border-t-accent animate-spin" />
